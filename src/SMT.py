@@ -11,6 +11,7 @@ Single Molecule Tools
 """
 import sys
 from tracking import track
+from simulation import simulate
 from parameters import Parameters
 
 def main():
@@ -20,6 +21,11 @@ def main():
     if mode == "track":
         filename = sys.argv[2]
         track(filename, params)
+
+    if mode == "simulate":
+#EJH#         filename = sys.argv[2]
+        simulate(params)
+
     else:
         print("//////////////////////////////")
         print("     Single Molecule Tools")

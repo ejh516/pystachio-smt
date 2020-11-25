@@ -10,9 +10,20 @@
 
 """
 
-class Spot:
-    def __init__(self, x,y):
-        self.pos = [x,y]
+class Spots:
+    def __init__(self, num_spots):
+        self.num_spots = num_spots
+        self.positions = np.zeros(num_spots, 2)
+        self.clipping = [False] * num_spots
+        self.bg_intensity = np.zeros(num_spots) 
+        self.spot_intensity =  np.zeros(num_spots)
+        self.centre_intensity =  np.zeros(num_spots)
+        self.width = np.zeros(num_spots,2)
+        self.first_frame = [0]*num_spots
+        self.traj_num = [0] * num_spots
+        self.snr = np.zeros(num_spots,2)
+        self.laser_on_frame = 0
+
 
     def link():
         return False
