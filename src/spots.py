@@ -9,19 +9,20 @@
 """
 
 """
+import numpy as np
 
 class Spots:
     def __init__(self, num_spots):
         self.num_spots = num_spots
-        self.positions = np.zeros(num_spots, 2)
+        self.positions = np.zeros([num_spots, 2])
         self.clipping = [False] * num_spots
         self.bg_intensity = np.zeros(num_spots) 
         self.spot_intensity =  np.zeros(num_spots)
         self.centre_intensity =  np.zeros(num_spots)
-        self.width = np.zeros(num_spots,2)
-        self.first_frame = [0]*num_spots
-        self.traj_num = [0] * num_spots
-        self.snr = np.zeros(num_spots,2)
+        self.width = np.zeros([num_spots,2])
+        self.frame = 0
+        self.traj_num = np.array(range(num_spots))
+        self.snr = np.zeros([num_spots,2])
         self.laser_on_frame = 0
 
 
@@ -39,16 +40,16 @@ class Spots:
 def find_spots():
     return False
 
-def merge_coincedent_spots(candidate_spots, min_distance):
-    good_spots = []
-    for candidate in candidate_spots
-        is_good_spot = True
-        for good_spot in good_spots
-            if good_spot.distance_from(candidate) < min_distance:
-            is_good_spot = False
-            break
-        if is_good_spot:
-            good_spots.append(candidate)
-
+#EJH# def merge_coincedent_spots(candidate_spots, min_distance):
+#EJH#     good_spots = []
+#EJH#     for candidate in candidate_spots
+#EJH#         is_good_spot = True
+#EJH#         for good_spot in good_spots
+#EJH#             if good_spot.distance_from(candidate) < min_distance:
+#EJH#             is_good_spot = False
+#EJH#             break
+#EJH#         if is_good_spot:
+#EJH#             good_spots.append(candidate)
+#EJH# 
     return good_spots
 

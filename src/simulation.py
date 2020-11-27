@@ -11,18 +11,19 @@ Simulator
 """
 import numpy as np
 import numpy.random as random
+from functools import reduce
 from spots import Spots
 
 def simulate(params):
     # Initialise
-    noSpots = 2
+    num_spots = 2
     Isingle = 10000
     BGmean = 500 # mean background pixel intensity
     BGstd = 120 # standard deviation of background pixels
-    noFrames = 5
+    num_frames = 5
     sizeN = 50
     sizeM = 50
-    bleachTime = 10 # in frames, if 0 then no bleaching
+    bleach_time = 10 # in frames, if 0 then no bleaching
     diffusionCoeff = 1# um2/s
     nDiffPoints = 4 # number of MSD points to calculate diffusion const
     frameTime = 0.005 # seconds
@@ -32,42 +33,32 @@ def simulate(params):
     fileName = 'tdiffusingSpots.tif'
 
     # Make a spot array the same size as normal
-    real_spots = [Spots.new(noSpots*noFrames)] * noFrames
-    real_spots[:].spot_intensity = Isingle
+    real_spots = [Spots(num_spots) for i in range(num_frames)]
 
     # initialise the spot co-ords
-    real_spots[0].positions[:,0] = random.rand(noSpots) * sizeN
-    real_spots[0].positions[:,1] = random.rand(noSpots) * sizeM
-    real_spots[:].first_frame = 0
-    real_spots[:].traj_num = range(0, noSpots)
+    real_spots[0].positions[:,0] = random.rand(num_spots) * sizeN
+    real_spots[0].positions[:,1] = random.rand(num_spots) * sizeM
+    real_spots[0].spot_intensity = Isingle
+    real_spots[0].frame = 1
 
     # Simulate diffusion
     S = np.sqrt(2*diffusionCoeff*frameTime)/pixelSize
-    currentTrajNo = range(noSpots)
     frame_start = 0
-    frame_end = noSpots
+    frame_end = num_spots
 
-    for frame in range(1,noFrames):
-        prev_frame_start = frame_start
-        prev_frame_end = frame_end
-        frame_start += noSpots
-        frame_end   += noSpots
-        spotsReal[frame_start:frame_end,8] = frame
-        spotsReal[frame_start:frame_end,9] = currentTrajNo
-        spotsReal[frame_start:frame_end,0:2] = random.normal(spotsReal[prev_frame_start:prev_frame_end,0:2],S,(noSpots,2))
+    for frame in range(1,num_frames):
+        real_spots[frame].frame = frame+1
+        real_spots[frame].traj_num = real_spots[frame-1].traj_num[:]
+        real_spots[frame].positions = random.normal(real_spots[frame-1].positions, S, (num_spots,2))
 
-        if bleachTime>0:
-            bleachedSpots=filter(random.rand(noSpots)<1/bleachTime, currentTrajNo)
-            for b=1:length(bleachedSpots)
-                spotsReal(spotsReal(:,9)==t+1 & spotsReal(:,9)==bleachedSpots(b),1)=rand(1)*sizeN
-                spotsReal(spotsReal(:,9)==t+1 & spotsReal(:,9)==bleachedSpots(b),2)=rand(1)*sizeM
-                spotsReal(spotsReal(:,9)==t+1 & spotsReal(:,9)==bleachedSpots(b),9)=max(spotsReal(:,9))+1            
-
-        currentTrajNo = spotsReal[frame_start:frame_end,9]
-    print("Positions:")
-    print(spotsReal[:,0:2])
-
-
+        if bleach_time > 0:
+            bleached_spots = filter(lambda x: random.rand() < 1/bleach_time, range(num_spots))
+            for spot in bleached_spots:
+                print(f"Bleaching spot {spot}")
+                real_spots[frame].positions[spot,0] = random.rand(1)*sizeN
+                real_spots[frame].positions[spot,1] = random.rand(1)*sizeM
+                next_traj_num = np.max(real_spots[frame].traj_num) + 1
+                real_spots[frame].traj_num[spot] = next_traj_num
 #
 #
 #    # Simulate image stack and save
