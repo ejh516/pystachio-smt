@@ -12,26 +12,27 @@ IMAGES
 
 
 from libtiff import TIFF
+import skimage.external.tifffile as tifffile
 import sys
 
 import numpy as np
 
 class Image():
-    def read(filename, params):
-        im = Image()
-        im.tif = TIFF.open(filename)
+    def __init__(self, filename="", data=[]):
+        self.filename = filename
+        self.data = data
 
-        iframe = 1
-        for frame in im.tif.iter_images():
-            if iframe == 1:
-                im.frames = np.expand_dims(frame,axis=2)
-            else:
-                im.frames = np.append(im.frames,np.expand_dims(frame,axis=2),axis=2)
-            iframe += 1
+    def read(self, filename):
+        self.filename = filename
+        self.data = tifffile.imread(filename)
+        self.num_frames = self.data.shape[0]
+        self.resolution = (self.data.shape[1],self.data.shape[2])
+        print(f"Read in {filename}")
+        print(f"num_frames: {self.num_frames}")
+        print(f"resolution: {self.resolution}")
 
-
-        im.num_frames = np.size(im.frames,axis=2)
-        return im
+    def write(self):
+        tifffile.imsave(self.filename, self.data)
 
     def frame(self, iframe):
         return self.frames[iframe]
@@ -52,3 +53,4 @@ class Image():
         else:
             start_frame = min(start_frames)
             frame_average.append(np.sum(self.frames[:,:,start_frame:start_frame+params.frame_avg_window], axis=2))
+

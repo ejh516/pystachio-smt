@@ -39,7 +39,7 @@ class Spots:
 
 def find_spots():
     return False
-
+#EJH# 
 #EJH# def merge_coincedent_spots(candidate_spots, min_distance):
 #EJH#     good_spots = []
 #EJH#     for candidate in candidate_spots
@@ -51,5 +51,5 @@ def find_spots():
 #EJH#         if is_good_spot:
 #EJH#             good_spots.append(candidate)
 #EJH# 
-    return good_spots
+#EJH#     return good_spots
 
