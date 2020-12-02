@@ -80,7 +80,8 @@ def simulate(params):
 
     for frame in range(num_frames):
         img_frames[frame,:,:] = random.poisson(img_frames[frame,:,:])
-        img_frames[frame,:,:] += random.normal(BGmean, BGstd, [sizeN, sizeM]).astype(np.uint16)
+        bg_noise = random.normal(BGmean, BGstd, [sizeN, sizeM])
+        img_frames[frame,:,:] += np.where(bg_noise > 0, bg_noise.astype(np.uint16), 0)
 
     print("Min = ", np.min(img_frames))
     print("Max = ", np.max(img_frames))
@@ -98,8 +99,8 @@ def simulate(params):
         im_frame = plt.imshow(new_im.data[frame,:,:], animated=True, vmin=0, vmax=np.max(new_im.data))
         frames.append([im_frame])
 
-    
-    video = animation.ArtistAnimation(fig, frames, interval=20)
+
+    video = animation.ArtistAnimation(fig, frames, interval=200)
     plt.show()
 
 #

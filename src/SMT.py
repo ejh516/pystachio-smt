@@ -28,7 +28,6 @@ def main():
         track(filename, params)
 
     elif mode == "simulate":
-#EJH#         filename = sys.argv[2]
         simulate(params)
 
     elif mode == "view":
@@ -44,7 +43,7 @@ def main():
             frames.append([im_frame])
 
         
-        video = animation.ArtistAnimation(fig, frames, interval=20)
+        video = animation.ArtistAnimation(fig, frames, interval=50)
         plt.show()
 
 
