@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
@@ -26,19 +26,19 @@ class Spots:
         self.laser_on_frame = 0
 
 
-    def link():
-        return False
-
-    def find_centre():
-        return False
-
-    def distance_from(self, candidate):
-        dx = self.pos[x] - candidate.pos[x]
-        dy = self.pos[y] - candidate.pos[y]
-        return sqrt(dx**2 + dy**2)
-
-def find_spots():
-    return False
+#EJH#     def link():
+#EJH#         return False
+#EJH# 
+#EJH#     def find_centre():
+#EJH#         return False
+#EJH# 
+#EJH#     def distance_from(self, candidate):
+#EJH#         dx = self.pos[x] - candidate.pos[x]
+#EJH#         dy = self.pos[y] - candidate.pos[y]
+#EJH#         return sqrt(dx**2 + dy**2)
+#EJH# 
+#EJH# def find_spots():
+#EJH#     return False
 #EJH# 
 #EJH# def merge_coincedent_spots(candidate_spots, min_distance):
 #EJH#     good_spots = []
@@ -52,4 +52,3 @@ def find_spots():
 #EJH#             good_spots.append(candidate)
 #EJH# 
 #EJH#     return good_spots
-

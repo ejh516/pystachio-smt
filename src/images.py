@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 # vim:fenc=utf-8
 #
@@ -10,9 +10,7 @@
 IMAGES
 """
 
-
-from libtiff import TIFF
-import skimage.external.tifffile as tifffile
+import tifffile
 import sys
 
 import numpy as np
