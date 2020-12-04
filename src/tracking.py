@@ -12,105 +12,31 @@ Single Molecule Tools
 import numpy as np
 import sys
 
-from fitting import Fit
-from images import Image
+import spots
 
-def track(filename, params):
+def track(image_data, params):
 
-    # Create fit type and options
-    fit = Fit(params)
-
-    # Read in the tif data
-    image_data = Image.read(filename, params)
-
-
-    if params.verbose: print(f"Loaded {image_data.num_frames} frames from {filename}")
-
-    # Rotate channels if horizonatally split
-    if params.c_split == "horizontal":
-        image_data.rotate(270)
-
-
-    # Determine the laser-on frame
-    start_frames = detect_laser_on(image_data, params)
-
-    if params.frames_to_track == 0:
-        params.frames_to_track = image_data.num_frames - start_frames[0]
-
-    # Calculate per-pixel frame average
-    image_data.calculate_frame_average(start_frames, params)
-
-    for channel in range(params.start_channel, params.end_channel+1):
-        # Initialise the spot array
-        spots = []
-        spot_images = []
-
-        # Determine the start & end frame and the step size
-        start_frame = start_frames[channel]
-
-        if params.ALEX:
-            frame_step = 2
-        else:
-            frame_step = 1
-
-        # Loop over the frames
-        for i in range(start_frame, start_frame+params.frames_to_track, frame_step):
-            if params.verbose:
-                print(f"Tracking frame {i}") 
-
-            if np.max(image_data.frames[:,:,i]) > params.sat_pixel_val:
-                sys.stderr.write("WARNING: Frame includes saturated pixels!\n")
-
-
-            if params.use_cursor:
-                sys.exit("ERROR: Cursor mode not yet supported!")
-
-            else:
-                candidate_spots = find_spots(image_data.frame(i), params)
-
-            if params.verbose:
-                print("Candidates found")
-
-
-
-            # Plot the candidate spots
-            # ...
-
-
-
-
-def detect_laser_on(image_data,params):
-    start_frames = [0,0]
-    if params.determine_first_frames:
-        start_frames = (image_data, params)
-
-    else:
-        if params.ALEX:
-            start_frames[0] = 1
-            start_frames[1] = 2
-        else:
-            start_frames[0] = 0
-            start_frames[1] = 0
-
-        
-
-    sys.stderr.write("WARNING: detect_laser_on not yet impletmented!\n")
-    return start_frames
-    # ...
-
-def find_spots(frame, params):
-    signal = tophat(frame)
-
-    hist = img_histogram(signal)
-
-    x_width, maxmin_val = fwhm(hist)
-
-    if x_width > 0:
-        threshold_cell_auto = maxmin_val
-    else:
-        threshold_cell_auto = maxloc(hist)
-
-    gaussian_signal = gaussian()
-
-    sys.stderr.write("WARNING: find_spots not yet impletmented!\n")
-    return []
+    sys.exit("Tracking is not yet implemented")
+#EJH#     # For each frame, detect spots
+#EJH#     all_spots = []
+#EJH#     for frame in range(image_data.num_frames):
+#EJH#         if params.verbose: print(f"Tracking frame {frame+1} of {image_data.num_frames}")
+#EJH# 
+#EJH#         # Isolate this frame's data
+#EJH#         frame_data = image_data.frames[frame]
+#EJH#         frame_spots = spots.Spots()
+#EJH# 
+#EJH#         # Find the spots in this frame
+#EJH#         frame_spots.find_in_frame(frame_data)
+#EJH#         frame_spots.merge_coincedent_candidates(frame_data)
+#EJH#         if params.verbose: print(f"    {frame_spots.num_spots} candidates found")
+#EJH# 
+#EJH#         # Iteratively refine the spot centres
+#EJH#         frame_spots.refine_centres(frame_data)
+#EJH# 
+#EJH#         all_spots.append(frame_spots)
+#EJH# 
+#EJH#     # Link the spot trajectories across the frames
+#EJH#     spots.link_spot_trajectories(all_spots)
+#EJH# 
+#EJH#     return all_spots

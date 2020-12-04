@@ -11,42 +11,35 @@ Single Molecule Tools
 """
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 
-from tracking import track
-from simulation import simulate
-from parameters import Parameters
-from images import Image
+import tracking
+import simulation
+import parameters
+import images
 
 def main():
-    params = Parameters()
+    params = parameters.Parameters()
+    params.read(sys.argv)
 
-    mode = sys.argv[1]
-    if mode == "track":
-        filename = sys.argv[2]
-        track(filename, params)
+    if params.task == "track":
+        pixel_data = PixelData()
+        pixel_data.read(params.filename)
 
-    elif mode == "simulate":
-        simulate(params)
+        if params.verbose:
+            print(f"Loaded {pixel_data.num_frames} frames from {filename}")
+            print(f"Resolution: {pixel_data.resolution}")
 
-    elif mode == "view":
-        img = Image()
-        filename = sys.argv[2]
-        img.read(filename)
+        spots = tracking.track(filename, params)
 
+    elif params.task == "simulate":
+        image_data = simulation.simulate(params)
+#EJH#         spot_data.write(params)
+        image_data.write(params)
 
-        fig = plt.figure()
-        frames = []
-        for frame in range(img.num_frames):
-            im_frame = plt.imshow(img.data[frame,:,:], animated=True, vmin=0, vmax=np.max(img.data))
-            frames.append([im_frame])
-
-        
-        video = animation.ArtistAnimation(fig, frames, interval=50)
-        plt.show()
-
-
+    elif params.task == "view":
+        img = images.ImageData()
+        img.read(params.filename)
+        img.render()
 
     else:
         print("//////////////////////////////")
