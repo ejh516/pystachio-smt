@@ -24,7 +24,8 @@ class Image():
         self.filename = filename
         self.data = tifffile.imread(filename)
         self.num_frames = self.data.shape[0]
-        self.resolution = (self.data.shape[1],self.data.shape[2])
+        self.resolution = (self.data.shape[1], self.data.shape[2])
+        self.num_pixels = self.data.shape[1] * self.data.shape[2]
         print(f"Read in {filename}")
         print(f"num_frames: {self.num_frames}")
         print(f"resolution: {self.resolution}")
@@ -43,12 +44,10 @@ class Image():
         else:
             sys.exit("ERROR: Images can only be rotated by multiples of 90°")
 
-    def calculate_frame_average(self, start_frames, params):
-        frame_average = []
+    def calculate_frame_average(self, params):
+        self.frame_average = []
         if params.ALEX:
-            frame_average.append(np.sum(self.frames[:,:,start_frames[0]:2*params.frame_avg_window:2], axis=2))
-            frame_average.append(np.sum(self.frames[:,:,start_frames[1]:2*params.frame_avg_window:2], axis=2))
+            sys.exit("ERROR: ALEX support not yet implemented")
         else:
-            start_frame = min(start_frames)
-            frame_average.append(np.sum(self.frames[:,:,start_frame:start_frame+params.frame_avg_window], axis=2))
+            self.frame_average = np.sum(self.data[:,:,:], axis=(1,2)) / self.num_pixels
 
