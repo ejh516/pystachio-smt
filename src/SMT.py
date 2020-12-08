@@ -21,31 +21,29 @@ def main():
     params = parameters.Parameters()
     params.read(sys.argv)
 
-    if params.task == "track":
-        pixel_data = PixelData()
-        pixel_data.read(params.filename)
+    for task in params.task:
+        if task == "track":
+            pixel_data = PixelData()
+            pixel_data.read(params.filename)
 
-        if params.verbose:
-            print(f"Loaded {pixel_data.num_frames} frames from {filename}")
-            print(f"Resolution: {pixel_data.resolution}")
+            if params.verbose:
+                print(f"Loaded {pixel_data.num_frames} frames from {filename}")
+                print(f"Resolution: {pixel_data.resolution}")
 
-        spots = tracking.track(filename, params)
+            spots = tracking.track(filename, params)
 
-    elif params.task == "simulate":
-        image_data = simulation.simulate(params)
+        elif task == "simulate":
+            image_data = simulation.simulate(params)
 #EJH#         spot_data.write(params)
-        image_data.write(params)
+            image_data.write(params)
 
-    elif params.task == "view":
-        img = images.ImageData()
-        img.read(params.filename)
-        img.render()
+        elif task == "view":
+            img = images.ImageData()
+            img.read(params.filename)
+            img.render()
 
-    else:
-        print("//////////////////////////////")
-        print("     Single Molecule Tools")
-        print("   Construction in progress")
-        print("//////////////////////////////")
+        else:
+            sys.exit(f"ERROR: Task {task} is not yet implemented. Aborting...")
 
 
 if __name__ == "__main__":

@@ -87,7 +87,8 @@ class ImageData():
         return max_intensity
 
     def render(self):
-        maxval = self.max_intensity() 
+        print("Rendering image")
+        maxval = self.max_intensity()
         figure = plt.figure()
         plt_frames = []
 
@@ -95,6 +96,7 @@ class ImageData():
             plt_frame = plt.imshow(frame.pixel_data, animated=True, vmin=0, vmax=maxval)
             plt_frames.append([plt_frame])
 
-        
         video = animation.ArtistAnimation(figure, plt_frames, interval=50)
         plt.show()
+
+        print("Done!")

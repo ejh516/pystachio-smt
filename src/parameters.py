@@ -55,3 +55,5 @@ class Parameters:
 
             except NameError:
                 sys.exit(f"ERROR: No such parameter '{key}'")
+
+        self.task = self.task.split(",")
