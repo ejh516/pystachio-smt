@@ -25,6 +25,29 @@ class Spots:
         self.snr = np.zeros([num_spots,2])
         self.laser_on_frame = 0
 
+    def find_in_frame(self, frame):
+        # This routine uses a bunch o' Matlab image processing calls.
+        # The equivelant Python library appears to be scikit-image.
+        # Below is the basic process, with the relevantk Matlab routines included
+
+        # Convert frame to image format (i.e. 8 bit uints rather than floats) [mat2grey]
+
+        # get structural element (map with disk of ones in a square of 0s) [strel]
+
+        # Apply top-hat filtering [imtophat]
+
+        # Get x & y histograms of the image data [imhist]
+
+        # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
+
+        # Convert the filtered image to b/w [im2bw]
+
+        # "Open" the b/w image (in a morphological sense) [imopen]
+
+        # Morph the resulting image some other way [bwmorph]
+
+        # Ultimate erode the image [bwulterode]
+
 
 #EJH#     def link():
 #EJH#         return False
