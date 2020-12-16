@@ -10,6 +10,7 @@
 
 """
 import numpy as np
+from images import display_image
 
 class Spots:
     def __init__(self, num_spots):
@@ -31,8 +32,11 @@ class Spots:
         # Below is the basic process, with the relevantk Matlab routines included
 
         # Convert frame to image format (i.e. 8 bit uints rather than floats) [mat2grey]
+        img_frame = frame.as_image()
+        display_image(img_frame)
 
         # get structural element (map with disk of ones in a square of 0s) [strel]
+
 
         # Apply top-hat filtering [imtophat]
 
