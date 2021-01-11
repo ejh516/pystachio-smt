@@ -28,6 +28,12 @@ class ImageData():
         frame.pixel_data[0,:,:] = self.pixel_data[index,:,:]
         return frame
 
+    def __setitem__(self, index, value):
+        if value.__class__ == "ImageData":
+            self.pixel_data[index,:,:] = value.pixel_data[0,:,:]
+        else:
+            self.pixel_data[index,:,:] = value
+
     def initialise(self, num_frames, resolution):
         self.num_frames = num_frames
         self.resolution = resolution
@@ -41,7 +47,7 @@ class ImageData():
         max_val = np.max(self.pixel_data)
         min_val = np.min(self.pixel_data)
 
-        img = (256 * (self.pixel_data[0,:,:]+min_val) / (max_val+min_val)).astype(np.uint8)
+        img = (255 * (self.pixel_data+min_val) / (max_val+min_val)).astype(np.uint8)
         return img
 
     def read(self, filename):
@@ -60,8 +66,9 @@ class ImageData():
 
     def write(self, params):
         # Create the data array
+        img_data = self.as_image()
 
-        tifffile.imsave(params.filename, self.pixel_data)
+        tifffile.imsave(params.filename, img_data)
 
     def rotate(self, angle):
         if angle % 90 == 0:

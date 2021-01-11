@@ -44,10 +44,12 @@ class Parameters:
         self.PSFwidth = 0.160/self.pixelSize # Sigma of a Gaussian, ~2/3 airy disk diameter
 
     def read(self, args):
-        for arg in args[1:]:
+        self.task = args[1]
+        self.task = self.task.split(",")
+        self.filename = args[2]
+        for arg in args[3:]:
             key, value = arg.split("=", 2)
             try:
-                print(f"Setting {key} to {value}")
                 if type(getattr(self,key)) == type(0):
                     setattr(self, key, int(value))
                 else:
@@ -56,4 +58,3 @@ class Parameters:
             except NameError:
                 sys.exit(f"ERROR: No such parameter '{key}'")
 
-        self.task = self.task.split(",")

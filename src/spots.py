@@ -27,28 +27,48 @@ class Spots:
         self.laser_on_frame = 0
 
     def find_in_frame(self, frame):
-        # This routine uses a bunch o' Matlab image processing calls.
-        # The equivelant Python library appears to be scikit-image.
-        # Below is the basic process, with the relevantk Matlab routines included
+        print("find_in_frame is not yet implemented")
+#EJH#         # This routine uses a bunch o' Matlab image processing calls.
+#EJH#         # The equivelant Python library appears to be scikit-image.
+#EJH#         # Below is the basic process, with the relevantk Matlab routines included
+#EJH# 
+#EJH#         # Convert frame to image format (i.e. 8 bit uints rather than floats) [mat2grey]
+#EJH#         img_frame = frame.as_image()
+#EJH#         display_image(img_frame)
+#EJH# 
+#EJH#         # Optionally apply gaussian filtering to the frame
+#EJH#         if params.filter_image == "gaussian":
+#EJH#             img_frame =cv2.GaussianBlur(img_frame,(3,3),0)
+#EJH# 
+#EJH#         # Get structural element (map with disk of ones in a square of 0s) [strel]
+#EJH#         r = params.disk_radius
+#EJH#         disk_size = 2*r - 1
+#EJH#         disk_kernel = np.zeros([disk_size, disk_size]).astype(np.uint8)
+#EJH#         for i in range(disk_size):
+#EJH#             for i in range(disk_size):
+#EJH#                 if (i-r+1)**2 + (j-r+1)**2 <= r**2:
+#EJH#                 disk_kernel[i,j] = 1
+#EJH# 
+#EJH#         # Apply top-hat filtering [imtophat]
+#EJH#         img_frame = cv2.tophat(img_frame, disk_kernel)
+#EJH# 
+#EJH#         # Get b/w threshold value from the histogram
+#EJH#         hist_data = cv2.calcHist([img_frame], [0], None, [256], [0,256])
+#EJH#         peak_width, peak_location = fwhm(hist_data)
+#EJH#         bw_threshold = peak_location
+#EJH# 
+#EJH#         # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
+#EJH#         img_frame =cv2.GaussianBlur(img_frame,(3,3),0)
+#EJH# 
+#EJH#         # Convert the filtered image to b/w [im2bw]
+#EJH#         bw_frame = cv2.threshold(img_frame, bw_threshold, 255, cv2.THRESH_BINARY)[1]
+#EJH# 
+#EJH#         # "Open" the b/w image (in a morphological sense) [imopen]
+#EJH#         bw_opened = cv2.morphologyEx(bw_frame, cv2.MORPH_OPEN, disk_kernel)
+#EJH# 
+#EJH#         # Fill holes ofsize 1 pixel in the resulting image [bwmorph]
+#EJH#         bw_filled = cv2.morphologyEx(bw_opened, cv2.MORPH_CLOSE, [[1]]) 
 
-        # Convert frame to image format (i.e. 8 bit uints rather than floats) [mat2grey]
-        img_frame = frame.as_image()
-        display_image(img_frame)
-
-        # get structural element (map with disk of ones in a square of 0s) [strel]
-
-
-        # Apply top-hat filtering [imtophat]
-
-        # Get x & y histograms of the image data [imhist]
-
-        # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
-
-        # Convert the filtered image to b/w [im2bw]
-
-        # "Open" the b/w image (in a morphological sense) [imopen]
-
-        # Morph the resulting image some other way [bwmorph]
 
         # Ultimate erode the image [bwulterode]
 

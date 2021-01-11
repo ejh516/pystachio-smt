@@ -68,7 +68,7 @@ def simulate(params):
         frame_data = random.poisson(frame_data)
         bg_noise = random.normal(params.BGmean, params.BGstd, params.resolution)
         frame_data += np.where(bg_noise > 0, bg_noise.astype(np.uint16), 0)
-        image.frames[frame].set_pixel_data(frame_data)
+        image[frame] = frame_data
 
     return image
 #
