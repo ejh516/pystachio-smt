@@ -130,3 +130,6 @@ dmypy.json
 
 # Ignore Vim temporary files
 .*.sw*
+
+# Ignore the data directory
+data/
