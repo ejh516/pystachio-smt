@@ -68,7 +68,7 @@ class ImageData():
         # Create the data array
         img_data = self.as_image()
 
-        tifffile.imsave(params.filename, img_data)
+        tifffile.imsave(params.seed_name + ".tif", img_data)
 
     def rotate(self, angle):
         if angle % 90 == 0:
@@ -86,20 +86,30 @@ class ImageData():
 
         return max_intensity
 
-    def render(self):
-        print("Rendering image")
+    def render(self, params, spot_positions=[]):
         maxval = self.max_intensity()
         figure = plt.figure()
         plt_frames = []
 
         for frame in range(self.num_frames):
-            plt_frame = plt.imshow(self.pixel_data[frame,:,:], animated=True, vmin=0, vmax=maxval)
+            plt_frame = plt.imshow(self.pixel_data[frame,:,:], animated=True, vmin=0, vmax=maxval, 
+                    extent=[0, self.resolution[0]*params.pixelSize, 0, self.resolution[1]*params.pixelSize])
+            if len(spot_positions) > 0:
+                [x,y] = zip(*spot_positions)
+                x_scaled = []
+                y_scaled = []
+                for i in range(len(x)):
+                    x_scaled.append((64-x[i]) * params.pixelSize)
+                    y_scaled.append(y[i] * params.pixelSize)
+                plt.scatter(y_scaled,x_scaled,c="r")
+
             plt_frames.append([plt_frame])
 
         video = animation.ArtistAnimation(figure, plt_frames, interval=50)
+        plt.title("Simulated spot data")
+        plt.xlabel("μm")
+        plt.ylabel("μm")
         plt.show()
-
-        print("Done!")
 
 def display_image(img):
     cv.imshow('image', img)

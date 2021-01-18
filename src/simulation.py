@@ -53,7 +53,7 @@ def simulate(params):
     image = ImageData()
     image.initialise(params.num_frames, params.resolution)
 
-    x_pos, y_pos = np.meshgrid(range(params.resolution[0]), range(params.resolution[1]))
+    x_pos, y_pos = np.meshgrid(range(params.resolution[1]), range(params.resolution[0]))
     for frame in range(params.num_frames):
         frame_data = np.zeros(image.resolution).astype(np.uint16)
 

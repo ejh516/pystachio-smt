@@ -23,18 +23,24 @@ class Parameters:
         self.determine_first_frames = False # Are there blank frames before the shutter opens?
         self.frame_avg_window = 5           # Number of frames to average over
         self.sat_pixel_val = 10**10         # Value representing saturated pixels
-        self.disk_radius = 5                # Radius of disk for finding spots in the image
 
         self.task = ""
         self.verbose = True
-        self.filename = ""
+        self.render_image = False
+        self.seed_name = ""
 
+        # Spots.find_in_frame
+        self.filter_image = "none"
+        self.disk_radius = 5
+        self.bw_threshold_tolerance = 0.75
+
+        self.max_displacement = 5
         # Initialise
         self.num_spots = 10
         self.Isingle = 10000
-        self.BGmean = 500 # mean background pixel intensity
-        self.BGstd = 120 # standard deviation of background pixels
-        self.num_frames = 30
+        self.BGmean = 500.0 # mean background pixel intensity
+        self.BGstd = 120.0 # standard deviation of background pixels
+        self.num_frames = 10
         self.resolution = [64, 64]
         self.bleach_time = 10 # in frames, if 0 then no bleaching
         self.diffusionCoeff = 1# um2/s
@@ -46,15 +52,27 @@ class Parameters:
     def read(self, args):
         self.task = args[1]
         self.task = self.task.split(",")
-        self.filename = args[2]
+        self.seed_name = args[2]
         for arg in args[3:]:
             key, value = arg.split("=", 2)
             try:
-                if type(getattr(self,key)) == type(0):
+                print(f"Setting {key} to {value}")
+                if type(getattr(self,key)) is type(0):
+                    print("  Found integer")
                     setattr(self, key, int(value))
+                elif type(getattr(self,key)) is type(0.0):
+                    print("  Found float")
+                    setattr(self, key, float(value))
+                elif type(getattr(self,key)) is type(True):
+                    setattr(self, key, value == "True")
                 else:
+                    print("  Found string")
                     setattr(self, key, value)
 
             except NameError:
                 sys.exit(f"ERROR: No such parameter '{key}'")
 
+            if key == "pixelSize":
+                self.PSFwidth = 0.160/self.pixelSize
+
+            print(f"Using {key} = {getattr(self,key)}")

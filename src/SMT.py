@@ -23,24 +23,24 @@ def main():
 
     for task in params.task:
         if task == "track":
-            pixel_data = PixelData()
-            pixel_data.read(params.filename)
+            image_data = images.ImageData()
+            image_data.read(params.seed_name + ".tif")
 
             if params.verbose:
-                print(f"Loaded {pixel_data.num_frames} frames from {filename}")
-                print(f"Resolution: {pixel_data.resolution}")
+                print(f"Loaded {image_data.num_frames} frames from {params.seed_name}")
+                print(f"Resolution: {image_data.resolution}")
 
-            spots = tracking.track(filename, params)
+            spots = tracking.track(image_data, params)
 
         elif task == "simulate":
             image_data = simulation.simulate(params)
-#EJH#         spot_data.write(params)
+#EJH#             spot_data.write(params)
             image_data.write(params)
 
         elif task == "view":
             img = images.ImageData()
             img.read(params.filename)
-            img.render()
+            img.render(params)
 
         else:
             sys.exit(f"ERROR: Task {task} is not yet implemented. Aborting...")

@@ -13,10 +13,9 @@ import numpy as np
 import sys
 
 import spots
+import trajectories
 
 def track(image_data, params):
-
-    sys.exit("Tracking is not yet implemented")
     # For each frame, detect spots
     all_spots = []
     for frame in range(image_data.num_frames):
@@ -24,20 +23,34 @@ def track(image_data, params):
 
         # Isolate this frame's data
         frame_data = image_data[frame]
-        frame_data.show()
+        #frame_data.show()
 
         # Find the spots in this frame
-        frame_spots = spots.Spots()
-        frame_spots.find_in_frame(frame_data)
-        frame_spots.merge_coincedent_candidates(frame_data)
-        if params.verbose: print(f"    {frame_spots.num_spots} candidates found")
+        frame_spots = spots.Spots(frame=frame)
+        frame_spots.find_in_frame(frame_data.as_image()[0,:,:], params)
 
-        # Iteratively refine the spot centres
-        frame_spots.refine_centres(frame_data)
+        if params.verbose: print(f"    {frame_spots.num_spots} candidates found")
+        frame_spots.merge_coincident_candidates()
+        if params.verbose: print(f"    {frame_spots.num_spots} candidates found after merging")
+
+
+#EJH#         # Iteratively refine the spot centres
+#EJH#         frame_spots.refine_centres(frame_data)
+
+        if (frame == 0):
+            frame_spots.index_first()
+        else:
+            frame_spots.link(all_spots[-1], params)
+
+        if params.render_image:
+            frame_data.render(params, spot_positions=frame_spots.positions)
 
         all_spots.append(frame_spots)
 
     # Link the spot trajectories across the frames
-    spots.link_spot_trajectories(all_spots)
+    trajs = trajectories.build_trajectories(all_spots)
+    trajectories.write_trajectories(trajs, params)
+
+#EJH#     image_data.render(trajectories=traj)
 
     return all_spots
