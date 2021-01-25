@@ -39,7 +39,7 @@ def main():
 
         elif task == "view":
             img = images.ImageData()
-            img.read(params.filename)
+            img.read(params.seed_name + ".tif")
             img.render(params)
 
         else:
