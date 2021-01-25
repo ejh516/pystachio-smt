@@ -9,6 +9,7 @@
 > written below with a pinch of salt. 
 > 
 > Rest assured, this document will be correct when the code is finally made
+
 > available to the public, and this warning vanishes into the ether.
 
 ## Introduction
@@ -113,3 +114,6 @@ Edward at [ed.higgins@york.ac.uk](ed.higgins@york.ac.uk).
 ## License
 
 Copyright © 2021, Edward Higgins. Released under the MIT License.
+
+## References
+[1] [Single Molecule Tools](https://awollman.github.io/single-molecule-tools/)
