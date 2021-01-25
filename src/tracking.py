@@ -37,18 +37,13 @@ def track(image_data, params):
 #EJH#         # Iteratively refine the spot centres
 #EJH#         frame_spots.refine_centres(frame_data)
 
-        if (frame == 0):
-            frame_spots.index_first()
-        else:
-            frame_spots.link(all_spots[-1], params)
-
         if params.render_image:
             frame_data.render(params, spot_positions=frame_spots.positions)
 
         all_spots.append(frame_spots)
 
     # Link the spot trajectories across the frames
-    trajs = trajectories.build_trajectories(all_spots)
+    trajs = trajectories.build_trajectories(all_spots, params)
     trajectories.write_trajectories(trajs, params)
 
 #EJH#     image_data.render(trajectories=traj)

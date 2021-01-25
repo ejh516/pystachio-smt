@@ -9,7 +9,10 @@
 """
 
 """
+import csv
+import sys
 import numpy as np
+
 class Trajectory:
     def __init__(self, id, frame, position):
         self.id = id
@@ -22,6 +25,14 @@ class Trajectory:
     def extend(self, frame, position):
         print(f"Extending trajectory {self.id} from frame {self.end_frame} to {frame}")
         print(f"  Started at {self.start_frame}")
+
+        print(f"Old shape: {self.path.shape}")
+        print(f"New shape: {[self.end_frame - self.start_frame+2, 2]}")
+        print(f"End frame: {self.end_frame} -> {frame}")
+
+        if frame > self.end_frame + 1: 
+            sys.exit("ERROR: Cannot extend a spot over multiple frames")
+
         self.end_frame = frame
         old_path = self.path
         self.path = np.zeros([self.end_frame - self.start_frame+2, 2])
@@ -29,26 +40,48 @@ class Trajectory:
         self.path[-1,:] = position
         self.length += 1
 
-def build_trajectories(all_spots):
+def build_trajectories(all_spots, params):
     trajectories = []
-    for frame_spots in all_spots:
-        for i in range(frame_spots.num_spots):
-            traj_num = frame_spots.traj_num[i]
-            frame = frame_spots.frame
-            position = frame_spots.positions[i,:]
-            if traj_num >= len(trajectories):
-                print(f"Creating {traj_num} in frame {frame}")
-                traj = Trajectory(len(trajectories), frame, position)
-                traj.start_frame = frame
-                traj.end_frame = frame
+    traj_num = 0
 
-                trajectories.append(traj)
+    # Create a trajectory for all spots in the first frame
+    for i in range(all_spots[0].num_spots):
+        trajectories.append(Trajectory(traj_num, 0, all_spots[0].positions[i,:]))
+        traj_num += 1
+
+    # Construct trajectories for the rest of the frames
+    for frame in range(1,len(all_spots)):
+        assigned_spots = []
+        for spot in range(all_spots[frame].num_spots):
+            close_candidates = []
+            for candidate in trajectories:
+                if candidate.end_frame != frame - 1:
+                    continue
+                candidate_dist = np.linalg.norm(all_spots[frame].positions[spot,:] - candidate.path[-1,:])
+                if  candidate_dist < params.max_displacement:
+                    close_candidates.append(candidate)
+
+            if len(close_candidates) == 0:
+                print(f"New trajectory found at {all_spots[frame].positions[spot,:]}") 
+                trajectories.append(Trajectory(traj_num, frame, all_spots[frame].positions[spot,:]))
+                traj_num += 1
+
+            if len(close_candidates) == 1:
+                print(f"Extending trajcectory {close_candidates[0].id} to position {all_spots[frame].positions[spot,:]}") 
+                close_candidates[0].extend(frame, all_spots[frame].positions[spot,:])
+
             else:
-                print(f"Extending {traj_num} in frame {frame}")
-                trajectories[traj_num].extend(frame, position)
+                print(f"Too many candidates, new trajectory created at {all_spots[frame].positions[spot,:]}") 
+                trajectories.append(Trajectory(traj_num, frame, all_spots[frame].positions[spot,:]))
+                traj_num += 1
 
-    filtered_trajectories = filter(lambda x: x.length > 1, trajectories)
-    
+    filtered_trajectories = list(filter(lambda x: x.length > 1, trajectories))
+
+    actual_traj_num = 1
+    for traj in filtered_trajectories:
+        traj.id = actual_traj_num
+        actual_traj_num += 1
+
     return filtered_trajectories
 
 def write_trajectories(trajectories,params):
@@ -57,4 +90,18 @@ def write_trajectories(trajectories,params):
         for i in range(traj.start_frame, traj.end_frame+1):
             f.write(f"{traj.id}\t{i}\t{traj.path[i-traj.start_frame,0]}\t{traj.path[i-traj.start_frame,1]}\n")
     f.close()
+
+def read_trajectories(filename):
+    trajectories = []
+    prev_traj_id = -1
+    with open(filename) as tsv_file:
+        tsv_reader = csv.reader(tsv_file)
+        for line in tsv_reader:
+            traj_id = line[0] = traj_id
+            frame = line[1]
+            position = line[1:2]
+
+            if traj_id == prev_traj_id:
+                traj.extend(frame, position)
+
 

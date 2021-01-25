@@ -53,7 +53,6 @@ class Spots:
 
 
     def find_in_frame(self, frame, params):
-        print(f"    Frame size: {frame.shape}")
         img_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # Get structural element (map with disk of ones in a square of 0s) [strel]
@@ -76,8 +75,6 @@ class Spots:
 
         peak_width, peak_location = fwhm(hist_data)
         bw_threshold = int(peak_location + params.bw_threshold_tolerance*peak_width)
-        print("    Peak width = ", peak_width)
-        print("    Peak location = ", peak_location)
 
         # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
         blurred_tophatted_frame =cv2.GaussianBlur(tophatted_frame,(3,3),0)
@@ -127,40 +124,3 @@ class Spots:
                 distances[i,j] = np.linalg.norm(self.positions[i,:] - other.positions[j,:])
 
         return distances
-
-    def index_first(self):
-
-        self.traj_num = list(range(self.num_spots))
-
-    def link(self, prev_spots, params):
-        print("Linking trajectories:")
-        distances = self.distance_from(prev_spots)
-
-        assigned = []
-        neighbours = np.argsort(distances[:,:], axis=1)
-        paired_spots = []
-        next_trajectory = max(prev_spots.traj_num)+1
-        for i in range(self.num_spots):
-            for j in range(prev_spots.num_spots):
-                neighbour = neighbours[i,j]
-                if (distances[i,neighbour] < params.max_displacement):
-                    if neighbour in paired_spots:
-                        continue
-                    else:
-                        paired_spots.append(neighbour)
-                        print(f"    Extending trajectory {prev_spots.traj_num[neighbour]}")
-                        self.traj_num[i] = prev_spots.traj_num[neighbour]
-                else:
-                    self.traj_num[i] = next_trajectory
-                    next_trajectory += 1
-                    print(f"    Creating trajectory {self.traj_num[i]}")
-                break
-
-            if self.traj_num[i] == -1:
-                sys.exit(f"Unable to find a match for spot {i}, frame {self.frame}")
-
-#EJH#     def link():
-#EJH#         return False
-#EJH# 
-#EJH#     def find_centre():
-#EJH#         return False
