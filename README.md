@@ -1,6 +1,7 @@
 # SMT-PYTHON
 
-> **WARNING** 
+> **WARNING**
+> 
 > This codebase is still in early development and, as such, some of the
 > documentation is writing cheques that the rest of the code can't cash. If you've
 > been given access to this code by Ed Higgins then he's already explained this to
@@ -16,7 +17,6 @@ Molecule Tools[1]. SMT-Python provides a utility for tracking and analysing
 localisation microscopy data, providing features for spot tracking and spot
 intensity & trajectory analysis.
 
----
 ## Synopsis
 ```{bash}
 $ smtpy web
@@ -32,7 +32,6 @@ $ smtpy track data/exp_data
 $ smtpy simulate,view data/sim_data num_spots=10
 ```
 
----
 ## Overview
 SMT-Python can be used in two ways: A Web GUI for interactive use, or a command
 UI for terminal-based & scripted use. Both interfaces provide the following
@@ -51,7 +50,6 @@ time, Signal-Noise ratio etc...
 This allows spot physical parameters such as ISingle values and diffusions
 coefficients to be extracted from tracked spots' trajectories & intensities.
 
----
 ## Installation
 SMT-Python uses a few fairly common libraries, listed in `requirements.txt`
 In short, these are:
@@ -70,7 +68,6 @@ to it directly using `/path/to/smtpy ...`.
 Improved installation instructions will be included when an improved
 installation method has been implemented.
 
----
 ## Usage
 
 For the terminal UI, the command can be run as follows:
@@ -95,7 +92,6 @@ The complete list of tasks currently implemented is:
 - `view`: View the dataset using the `Matplotlib` library.
 
 
----
 ## Contributing
 
 Information on how to contribute to the SMT-Python project is available in
@@ -107,7 +103,7 @@ Information on how to contribute to the SMT-Python project is available in
 
 If this seems daunting to you then good - you're going to learn a useful skill
 today!
----
+
 ## Authors
 
 This code has been developed by Edward Higgins in collaboration with the
