@@ -96,7 +96,7 @@ The complete list of tasks currently implemented is:
 ## Contributing
 
 Information on how to contribute to the SMT-Python project is available in
-`doc/contributing.md`. In short, the process is:
+[contributing.md](doc/contributing.md). In short, the process is:
 - Clone the repository,
 - Create a branch for your new changes (functionality, bug fixes, etc...),
 - Develop your changes in your new branch, and
