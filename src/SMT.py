@@ -6,9 +6,20 @@
 #
 # Distributed under terms of the MIT license.
 
+""" SMT - Single Molecule Tools program
+
+Description:
+    SMT.py contains the main program used for running SMT-Python
+ 
+Contains:
+    function main
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
-Single Molecule Tools
-"""
+
 import sys
 import numpy as np
 

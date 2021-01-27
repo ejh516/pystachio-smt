@@ -6,9 +6,21 @@
 #
 # Distributed under terms of the MIT license.
 
+""" SPOTS - Spot characterisation and manipulation module
+
+Description:
+    spots.py contains the Spots class for characterising and manipulating data
+    associated with bright spots in the image datasets provided.
+
+Contains:
+    class Spots
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
 
-"""
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt

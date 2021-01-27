@@ -5,10 +5,26 @@
 # Copyright © 2021 Edward Higgins <ed.higgins@york.ac.uk>
 #
 # Distributed under terms of the MIT license.
+ 
+""" TRAJECTORIES - Trajectory construction and manipulation module
 
+Description:
+    trajectories.py contains the Trajectory class containing information about
+    spot trajectories across multiple frames, along with the routines involved
+    in locating and extending the trajectories.
+
+Contains:
+    class Trajectory
+    function build_trajectories
+    function read_trajectories
+    function write_trajectories
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
 
-"""
 import csv
 import sys
 import numpy as np

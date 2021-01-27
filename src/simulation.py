@@ -6,9 +6,21 @@
 #
 # Distributed under terms of the MIT license.
 
+""" SIMULATION - Dataset simulation module
+
+Description:
+    simulation.py contains the code for the simulation task, which simulates
+    pseudo-experimental datasets as characterised by the relevant parameters.
+
+Contains:
+    function simulate
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
-Simulator
-"""
+
 import numpy as np
 import numpy.random as random
 import matplotlib.pyplot as plt

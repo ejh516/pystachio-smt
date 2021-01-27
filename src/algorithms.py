@@ -6,12 +6,29 @@
 #
 # Distributed under terms of the MIT license.
 
+""" ALGORITHMS - Low level algorithms module
+
+Description:
+    algorithms.py contains a number of useful algorithms that are used
+    throughout the code, but don't necessarily need any of the data structures
+    defined in other modules.
+
+Contains:
+    function fwhm
+    function get_distance_list
+    function find_local_maxima
+    function ultimate_erode
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
 
-"""
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+
 
 def fwhm(hist):
     x = np.linspace(0, 255, 256).astype(int)
@@ -79,7 +96,6 @@ def find_local_maxima(img):
     return local_maxima
 
 def ultimate_erode(img, orig):
-    print(f"Ultimate eroding image of shape {img.shape}")
     distance_list = get_distance_list(16)
     img_dist = np.zeros(img.shape)
 
@@ -97,17 +113,8 @@ def ultimate_erode(img, orig):
                         img_dist[i,j] = pixel[2]
                         break
                 if img_dist[i,j] == 0:
-                    plt.imshow(img_dist)
-                    plt.colorbar()
-                    plt.show()
-                    plt.imshow(img)
-                    plt.colorbar()
-                    plt.show()
-                    plt.imshow(orig)
-                    plt.colorbar()
-                    plt.show()
-                    print("  Unable to find nearby black pixel")
-                    sys.exit("Aborting")
+                    print(f"WARNING: Unable to find any spots in this frame")
+                    return []
 
     spot_locations = find_local_maxima(img_dist)
 

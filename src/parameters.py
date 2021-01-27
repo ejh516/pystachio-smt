@@ -6,9 +6,22 @@
 #
 # Distributed under terms of the MIT license.
 
+""" PARAMETERS - Program parameters module
+
+Description:
+    parameters.py contains the Parameters class that holds all the program
+    parameters, along with the default value for each parameter and routines
+    for setting those parameters.
+
+Contains:
+    class Parameters
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
-Parameters
-"""
+
 import sys
 
 class Parameters:
@@ -58,15 +71,12 @@ class Parameters:
             try:
                 print(f"Setting {key} to {value}")
                 if type(getattr(self,key)) is type(0):
-                    print("  Found integer")
                     setattr(self, key, int(value))
                 elif type(getattr(self,key)) is type(0.0):
-                    print("  Found float")
                     setattr(self, key, float(value))
                 elif type(getattr(self,key)) is type(True):
                     setattr(self, key, value == "True")
                 else:
-                    print("  Found string")
                     setattr(self, key, value)
 
             except NameError:

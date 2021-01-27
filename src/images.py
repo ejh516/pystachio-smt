@@ -6,8 +6,20 @@
 #
 # Distributed under terms of the MIT license.
 
-"""
-IMAGES
+""" IMAGES - Image access and manipulation module
+
+Description:
+    images.py contains the ImageData class for storing datasets of multiple
+    frames, along with routines for manipulating the images.
+
+Contains:
+    class    ImageData
+    function display_image
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
 
 import tifffile
