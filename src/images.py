@@ -56,10 +56,8 @@ class ImageData():
         self.defined = True
 
     def as_image(self):
-        max_val = np.max(self.pixel_data)
-        min_val = np.min(self.pixel_data)
 
-        img = (255 * (self.pixel_data+min_val) / (max_val+min_val)).astype(np.uint8)
+        img = self.pixel_data.astype(np.uint16)
         return img
 
     def read(self, filename):
@@ -121,6 +119,7 @@ class ImageData():
         plt.title("Simulated spot data")
         plt.xlabel("μm")
         plt.ylabel("μm")
+        plt.colorbar()
         plt.show()
 
 def display_image(img):
