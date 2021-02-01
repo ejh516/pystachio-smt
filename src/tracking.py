@@ -39,15 +39,18 @@ def track(image_data, params):
 
         # Find the spots in this frame
         frame_spots = spots.Spots(frame=frame)
-        frame_spots.find_in_frame(frame_data.as_image()[0,:,:], params)
+        frame_spots.find_in_frame(frame_data.as_image()[:,:], params)
 
         if params.verbose: print(f"    {frame_spots.num_spots} candidates found")
         frame_spots.merge_coincident_candidates()
         if params.verbose: print(f"    {frame_spots.num_spots} candidates found after merging")
 
 
-#EJH#         # Iteratively refine the spot centres
-#EJH#         frame_spots.refine_centres(frame_data)
+        # Iteratively refine the spot centres
+        frame_spots.refine_centres(frame_data, params)
+
+        frame_spots.filter_candidates(params)
+        if params.verbose: print(f"    {frame_spots.num_spots} candidates found after filtering")
 
         if params.render_image:
             frame_data.render(params, spot_positions=frame_spots.positions)

@@ -39,7 +39,7 @@ def main():
 
             if params.verbose:
                 print(f"Loaded {image_data.num_frames} frames from {params.seed_name}")
-                print(f"Resolution: {image_data.resolution}")
+                print(f"Resolution: {image_data.frame_size}")
 
             spots = tracking.track(image_data, params)
 
