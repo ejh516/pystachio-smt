@@ -49,7 +49,7 @@ def build_trajectories(all_spots):
 
     filtered_trajectories = filter(lambda x: x.length > 1, trajectories)
     
-    return filtered_trajectories
+    return trajectories #filtered_trajectories
 
 def write_trajectories(trajectories,params):
     f = open(params.seed_name + "_trajectories.tsv", "w")

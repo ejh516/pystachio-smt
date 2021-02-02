@@ -159,6 +159,21 @@ class Spots:
             if self.traj_num[i] == -1:
                 sys.exit(f"Unable to find a match for spot {i}, frame {self.frame}")
 
+
+    def get_spot_intensities(self, frame):
+        for i in range(self.num_spots):
+            x = int(self.positions[i,0])
+            y = int(self.positions[i,1])
+            #Create a tmp array with the centre of the spot in the centre
+            tmp = frame[x-8:x+9,y-8:y+9] # ED: is this right? or should be other way round?
+            spotmask = np.zeros(tmp.shape)
+            cv2.circle(spotmask, (8,8), 5, 1, -1)
+            bgintensity = np.mean(tmp[spotmask==0])
+            tmp = tmp - bgintensity
+            intensity = np.sum(tmp[spotmask==1])
+            print(intensity)
+            self.spot_intensity[i] = intensity
+            
 #EJH#     def link():
 #EJH#         return False
 #EJH# 

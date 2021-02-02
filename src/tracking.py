@@ -46,6 +46,7 @@ def track(image_data, params):
             frame_data.render(params, spot_positions=frame_spots.positions)
 
         all_spots.append(frame_spots)
+        frame_spots.get_spot_intensities(frame_data.as_image()[0,:,:])
 
     # Link the spot trajectories across the frames
     trajs = trajectories.build_trajectories(all_spots)
@@ -53,4 +54,4 @@ def track(image_data, params):
 
 #EJH#     image_data.render(trajectories=traj)
 
-    return all_spots
+    return (all_spots, trajs)
