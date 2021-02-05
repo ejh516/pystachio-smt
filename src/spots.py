@@ -6,15 +6,26 @@
 #
 # Distributed under terms of the MIT license.
 
+""" SPOTS - Spot characterisation and manipulation module
+
+Description:
+    spots.py contains the Spots class for characterising and manipulating data
+    associated with bright spots in the image datasets provided.
+
+Contains:
+    class Spots
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
 
-"""
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import sys
 
-from images import display_image
 from algorithms import *
 
 class Spots:
@@ -29,7 +40,7 @@ class Spots:
             self.width = np.zeros([num_spots,2])
             self.frame = frame
             self.traj_num = [-1] * self.num_spots
-            self.snr = np.zeros([num_spots,2])
+            self.snr = np.zeros([num_spots])
             self.laser_on_frame = 0
         else:
             self.frame = frame
@@ -45,7 +56,7 @@ class Spots:
         self.centre_intensity =  np.zeros(self.num_spots)
         self.width = np.zeros([self.num_spots,2])
         self.traj_num = [-1] * self.num_spots
-        self.snr = np.zeros([self.num_spots,2])
+        self.snr = np.zeros([self.num_spots])
 
         for i in range(self.num_spots):
             self.positions[i,:] = positions[i]
@@ -53,7 +64,6 @@ class Spots:
 
 
     def find_in_frame(self, frame, params):
-        print(f"    Frame size: {frame.shape}")
         img_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # Get structural element (map with disk of ones in a square of 0s) [strel]
@@ -76,8 +86,6 @@ class Spots:
 
         peak_width, peak_location = fwhm(hist_data)
         bw_threshold = int(peak_location + params.bw_threshold_tolerance*peak_width)
-        print("    Peak width = ", peak_width)
-        print("    Peak location = ", peak_location)
 
         # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
         blurred_tophatted_frame =cv2.GaussianBlur(tophatted_frame,(3,3),0)
@@ -119,6 +127,37 @@ class Spots:
 
         self.set_positions(new_positions)
 
+    def filter_candidates(self, params):
+        positions = []
+        clipping = []
+        bg_intensity = []
+        spot_intensity =  []
+        centre_intensity =  []
+        width = []
+        traj_num = []
+        snr = []
+
+        for i in range(self.num_spots):
+            if self.snr[i] > params.snr_filter_cutoff:
+                positions.append(self.positions[i,:])
+                clipping.append(self.clipping[i])
+                bg_intensity.append(self.bg_intensity[i])
+                spot_intensity.append(self.spot_intensity[i])
+                centre_intensity.append(self.centre_intensity[i])
+                width.append(self.width[i,:])
+                traj_num.append(self.traj_num[i])
+                snr.append(self.snr[i])
+
+        self.num_spots = len(clipping)
+        self.positions = np.array(positions)
+        self.clipping = np.array(clipping)
+        self.bg_intensity = np.array(bg_intensity)
+        self.spot_intensity =  np.array(spot_intensity)
+        self.centre_intensity =  np.array(centre_intensity)
+        self.width = np.array(width)
+        self.traj_num = np.array(traj_num)
+        self.snr = np.array(snr)
+
     def distance_from(self, other):
         distances = np.zeros([self.num_spots, other.num_spots])
 
@@ -129,7 +168,6 @@ class Spots:
         return distances
 
     def index_first(self):
-
         self.traj_num = list(range(self.num_spots))
 
     def link(self, prev_spots, params):
@@ -179,3 +217,99 @@ class Spots:
 #EJH# 
 #EJH#     def find_centre():
 #EJH#         return False
+
+    def refine_centres(self, frame, params):
+        image = frame.as_image()
+        # Refine the centre of each spot independently
+        for i_spot in range(self.num_spots):
+            r = params.subarray_halfwidth 
+            N = 2*r + 1
+
+            # Get the centre estimate, make sure the spot_region fits in the frame
+            p_estimate = self.positions[i_spot,:]
+            for d in (0,1):
+                if p_estimate[d] - r < 0:
+                    p_estimate[d] = r
+                elif p_estimate[d] + r+1 >= frame.frame_size[d]:
+                    p_estimate[d] = frame.frame_size[d]-r-1
+
+            # Create the sub-image
+            spot_region = np.array([[round(p_estimate[0])-r, round(p_estimate[0])+r],
+                                    [round(p_estimate[1])-r, round(p_estimate[1])+r]]).astype(int)
+
+            spot_pixels = image[spot_region[0,0]:spot_region[0,1]+1,
+                                spot_region[1,0]:spot_region[1,1]+1]
+
+            coords = np.mgrid[spot_region[0,0]:spot_region[0,1]+1,
+                              spot_region[1,0]:spot_region[1,1]+1]
+
+            Xs,Ys  = np.meshgrid(range(spot_region[0,0], spot_region[0,1]+1),
+                                 range(spot_region[1,0], spot_region[1,1]+1))
+
+            converged = False
+            iteration = 0
+            clipping = False
+            spot_intensity = 0
+            bg_intensity = 0
+            while not converged and iteration < params.gauss_mask_max_iter:
+                iteration += 1
+
+                # Generate the inner mask
+                inner_mask = np.where((coords[0,:,:]-p_estimate[0])**2 + (coords[1,:,:]-p_estimate[1])**2 
+                                      <= params.inner_mask_radius**2, 1, 0)
+                mask_pixels = np.sum(inner_mask)
+
+                # Generate the Gaussian mask
+                # This uses Numpy magic, it's almost as bad as the MATLAB...
+                coords_sq = (coords[:,:,:] - p_estimate[:,np.newaxis,np.newaxis])**2
+                exponent  = -(coords_sq[0,:,:] + coords_sq[1,:,:])/(2*params.gauss_mask_sigma**2)
+                gauss_mask = np.exp(exponent)
+
+                if np.sum(gauss_mask) != 0:
+                    gauss_mask /= np.sum(gauss_mask)
+
+                bg_mask = 1-inner_mask
+
+                # Calculate the local background intensity and subtract it off the sub-image
+                spot_bg = spot_pixels * bg_mask
+                num_bg_spots = np.sum(bg_mask)
+                bg_average = np.sum(spot_bg) / num_bg_spots
+                bg_corr_spot_pixels = spot_pixels - bg_average
+
+                spot_gaussian_product = bg_corr_spot_pixels * gauss_mask
+
+
+                p_estimate_new = np.zeros(2)
+                p_estimate_new[0] = np.sum(spot_gaussian_product*Xs) / np.sum(spot_gaussian_product)
+                p_estimate_new[1] = np.sum(spot_gaussian_product*Ys) / np.sum(spot_gaussian_product)
+                estimate_change = np.linalg.norm(p_estimate - p_estimate_new)
+
+#EJH#                 print(f"Spot {i_spot}: new position = {p_estimate_new}. Change of {estimate_change}")
+                p_estimate = p_estimate_new
+
+                spot_intensity = np.sum(bg_corr_spot_pixels * inner_mask)
+                bg_std = np.sqrt(np.sum(spot_bg**2)/num_bg_spots - bg_average**2)
+
+                if estimate_change < 1e-6:
+                    converged = True
+#EJH#                     print(f"Converged! Continue: {not converged and iteration < params.gauss_mask_max_iter}")
+
+                # Calculate background corrected sub-image
+
+                # Calculate revised position estimate
+
+            self.bg_intensity[i_spot] = bg_average
+            self.spot_intensity[i_spot] = spot_intensity
+            self.snr[i_spot] = abs(spot_intensity / (bg_std*num_bg_spots))
+            
+#EJH#             print(f"{frame}\t{i_spot}\t{p_estimate}\t{bg_average}\t{spot_intensity}\t{self.snr[i_spot]}")
+            if converged:
+                self.positions[i_spot,:] = p_estimate
+
+            if self.snr[i_spot] < 0.5:
+                self.positions[i_spot,:] = 0
+
+#EJH#             plt.imshow(spot_pixels)
+#EJH#             plt.colorbar()
+#EJH#             plt.scatter([p_estimate[0] - spot_region[0,0]], [p_estimate[1] - spot_region[1,0]])
+#EJH#             plt.show()

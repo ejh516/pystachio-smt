@@ -6,9 +6,21 @@
 #
 # Distributed under terms of the MIT license.
 
+""" SIMULATION - Dataset simulation module
+
+Description:
+    simulation.py contains the code for the simulation task, which simulates
+    pseudo-experimental datasets as characterised by the relevant parameters.
+
+Contains:
+    function simulate
+
+Author:
+    Edward Higgins
+
+Version: 0.2.0
 """
-Simulator
-"""
+
 import numpy as np
 import numpy.random as random
 import matplotlib.pyplot as plt
@@ -24,8 +36,8 @@ def simulate(params):
     real_spots = [Spots(params.num_spots) for i in range(params.num_frames)]
 
     # initialise the spot co-ords
-    real_spots[0].positions[:,0] = random.rand(params.num_spots) * params.resolution[0]
-    real_spots[0].positions[:,1] = random.rand(params.num_spots) * params.resolution[1]
+    real_spots[0].positions[:,0] = random.rand(params.num_spots) * params.frame_size[0]
+    real_spots[0].positions[:,1] = random.rand(params.num_spots) * params.frame_size[1]
     real_spots[0].spot_intensity[:] = params.Isingle
     real_spots[0].frame = 1
 
@@ -43,19 +55,19 @@ def simulate(params):
         if params.bleach_time > 0:
             bleached_spots = filter(lambda x: random.rand() < 1/params.bleach_time, range(params.num_spots))
             for spot in bleached_spots:
-                real_spots[frame].positions[spot,0] = random.rand(1)*params.resolution[0]
-                real_spots[frame].positions[spot,1] = random.rand(1)*params.resolution[1]
+                real_spots[frame].positions[spot,0] = random.rand(1)*params.frame_size[0]
+                real_spots[frame].positions[spot,1] = random.rand(1)*params.frame_size[1]
                 next_traj_num = np.max(real_spots[frame].traj_num) + 1
                 real_spots[frame].traj_num[spot] = next_traj_num
 
 
     # Simulate the image stack and save
     image = ImageData()
-    image.initialise(params.num_frames, params.resolution)
+    image.initialise(params.num_frames, params.frame_size)
 
-    x_pos, y_pos = np.meshgrid(range(params.resolution[1]), range(params.resolution[0]))
+    x_pos, y_pos = np.meshgrid(range(params.frame_size[1]), range(params.frame_size[0]))
     for frame in range(params.num_frames):
-        frame_data = np.zeros(image.resolution).astype(np.uint16)
+        frame_data = np.zeros(image.frame_size).astype(np.uint16)
 
         for spot in range(params.num_spots):
             frame_data += ((real_spots[frame].spot_intensity[spot]/(2*np.pi*params.PSFwidth)) \
@@ -66,7 +78,7 @@ def simulate(params):
 
 
         frame_data = random.poisson(frame_data)
-        bg_noise = random.normal(params.BGmean, params.BGstd, params.resolution)
+        bg_noise = random.normal(params.BGmean, params.BGstd, params.frame_size)
         frame_data += np.where(bg_noise > 0, bg_noise.astype(np.uint16), 0)
         image[frame] = frame_data
 
