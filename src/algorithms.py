@@ -86,7 +86,7 @@ def fwhm(data):
     else:
         p_type = 2
         trail_t = None
-        x_width = None
+        x_width = 0
 
     return (x_width, extremum_val)
 
