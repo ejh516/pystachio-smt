@@ -63,6 +63,8 @@ class Parameters:
         self.pixelSize = 0.120 # microns
         self.PSFwidth = 0.160/self.pixelSize # Sigma of a Gaussian, ~2/3 airy disk diameter
 
+        self.p_bleach_per_frame = 0.25
+
         self.subarray_halfwidth = 5
         self.inner_mask_radius = 3
         self.gauss_mask_sigma = 2

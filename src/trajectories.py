@@ -98,7 +98,9 @@ def build_trajectories(all_spots, params):
         traj.id = actual_traj_num
         actual_traj_num += 1
 
+    filtered_trajectories = list(filter(lambda x: x.length > 1, trajectories))
     return filtered_trajectories
+
 
 def write_trajectories(trajectories,params):
     f = open(params.seed_name + "_trajectories.tsv", "w")

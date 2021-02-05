@@ -167,6 +167,57 @@ class Spots:
 
         return distances
 
+    def index_first(self):
+        self.traj_num = list(range(self.num_spots))
+
+    def link(self, prev_spots, params):
+        print("Linking trajectories:")
+        distances = self.distance_from(prev_spots)
+
+        assigned = []
+        neighbours = np.argsort(distances[:,:], axis=1)
+        paired_spots = []
+        next_trajectory = max(prev_spots.traj_num)+1
+        for i in range(self.num_spots):
+            for j in range(prev_spots.num_spots):
+                neighbour = neighbours[i,j]
+                if (distances[i,neighbour] < params.max_displacement):
+                    if neighbour in paired_spots:
+                        continue
+                    else:
+                        paired_spots.append(neighbour)
+                        print(f"    Extending trajectory {prev_spots.traj_num[neighbour]}")
+                        self.traj_num[i] = prev_spots.traj_num[neighbour]
+                else:
+                    self.traj_num[i] = next_trajectory
+                    next_trajectory += 1
+                    print(f"    Creating trajectory {self.traj_num[i]}")
+                break
+
+            if self.traj_num[i] == -1:
+                sys.exit(f"Unable to find a match for spot {i}, frame {self.frame}")
+
+
+    def get_spot_intensities(self, frame):
+        for i in range(self.num_spots):
+            x = int(self.positions[i,0])
+            y = int(self.positions[i,1])
+            #Create a tmp array with the centre of the spot in the centre
+            tmp = frame[x-8:x+9,y-8:y+9] # ED: is this right? or should be other way round?
+            spotmask = np.zeros(tmp.shape)
+            cv2.circle(spotmask, (8,8), 5, 1, -1)
+            bgintensity = np.mean(tmp[spotmask==0])
+            tmp = tmp - bgintensity
+            intensity = np.sum(tmp[spotmask==1])
+            print(intensity)
+            self.spot_intensity[i] = intensity
+            
+#EJH#     def link():
+#EJH#         return False
+#EJH# 
+#EJH#     def find_centre():
+#EJH#         return False
+
     def refine_centres(self, frame, params):
         image = frame.as_image()
         # Refine the centre of each spot independently
