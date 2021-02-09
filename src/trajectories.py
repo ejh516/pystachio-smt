@@ -40,7 +40,7 @@ class Trajectory:
         self.length = 1
 
     def extend(self, spots, spot_id):
-        if frame > self.end_frame + 1: 
+        if spots.frame > self.end_frame + 1: 
             sys.exit("ERROR: Cannot extend a spot over multiple frames")
 
         self.end_frame = spots.frame
@@ -57,7 +57,7 @@ def build_trajectories(all_spots, params):
 
     # Create a trajectory for all spots in the first frame
     for i in range(all_spots[0].num_spots):
-        trajectories.append(Trajectory(traj_num, 0, all_spots[0], i))
+        trajectories.append(Trajectory(traj_num, all_spots[0], i))
         traj_num += 1
 
     # Construct trajectories for the rest of the frames
@@ -73,14 +73,14 @@ def build_trajectories(all_spots, params):
                     close_candidates.append(candidate)
 
             if len(close_candidates) == 0:
-                trajectories.append(Trajectory(traj_num, frame, all_spots[frame], spot))
+                trajectories.append(Trajectory(traj_num, all_spots[frame], spot))
                 traj_num += 1
 
             if len(close_candidates) == 1:
-                close_candidates[0].extend(frame, all_spots[frame], spot)
+                close_candidates[0].extend(all_spots[frame], spot)
 
             else:
-                trajectories.append(Trajectory(traj_num, frame, all_spots[frame], spot))
+                trajectories.append(Trajectory(traj_num, all_spots[frame], spot))
                 traj_num += 1
 
     filtered_trajectories = list(filter(lambda x: x.length > 1, trajectories))
@@ -117,7 +117,7 @@ def read_trajectories(filename):
 
             if traj_id != prev_traj_id:
                 trajectories.append(Trajectory(traj_id, spot, 0))
-            else
-                trajectories[-1].extend(frame, spot, 0)
+            else:
+                trajectories[-1].extend(spot, 0)
 
 
