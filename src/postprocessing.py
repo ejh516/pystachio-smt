@@ -34,16 +34,16 @@ def get_diffusion_coef(traj_list, params):
     diffusion_coefs = []
     loc_precisions = []
     for traj in traj_list:
-        if len(traj.path[:,0])<3:
+        if len(traj.path)<3:
             continue
-        trajectory_length = len(traj.path[:,0])
+        trajectory_length = len(traj.path)
         MSD = np.zeros(trajectory_length) # mean squared displacement
         n = np.zeros(trajectory_length) # used to measure number of trajectories of given length for weighting
         tau = np.zeros(trajectory_length) # times between MSDs
         track_lengths = np.zeros(trajectory_length)
         for i in range(trajectory_length-1):
-            x = traj.path[:,0]*params.pixelSize
-            y = traj.path[:,1]*params.pixelSize            
+            x = np.array(traj.path)[:,0]*params.pixelSize
+            y = np.array(traj.path)[:,1]*params.pixelSize
             square_diffs = (x[1+i:]-x[:trajectory_length-(i+1)])**2 + (y[1+i:]-y[:trajectory_length-(i+1)])**2
             MSD[i] = np.mean(square_diffs)
             track_lengths[i] = len(square_diffs)
@@ -66,7 +66,6 @@ def get_diffusion_coef(traj_list, params):
 def plot_traj_intensities(spots):
     trajnums = []
     for spot in spots: trajnums.append(spot.traj_num)
-    print(trajnums)
     ntraj = np.amax(trajnums[1]) #np.amax(np.amax(trajnums))
     for traj in range(ntraj):
         intensity = []
