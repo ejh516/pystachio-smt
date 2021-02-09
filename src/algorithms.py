@@ -65,10 +65,14 @@ def fwhm(data):
         centre_index = np.argmin(data)
         Pol = -1
 
+    if centre_index > 254:
+        print("WARNING: Struggling to find a peak in histogram")
+        centre_index = 254
+
     extremum_val = x[centre_index]
 
     i = 1
-    while np.sign(data[i]-lev50) == np.sign(data[i-1]-lev50):
+    while np.sign(data[i]-lev50) == np.sign(data[i-1]-lev50) and i<255:
         i += 1
 
     interp = (lev50-data[i-1]) / (data[i]-data[i-1])
