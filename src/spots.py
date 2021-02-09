@@ -171,7 +171,6 @@ class Spots:
         self.traj_num = list(range(self.num_spots))
 
     def link(self, prev_spots, params):
-        print("Linking trajectories:")
         distances = self.distance_from(prev_spots)
 
         assigned = []
@@ -186,12 +185,10 @@ class Spots:
                         continue
                     else:
                         paired_spots.append(neighbour)
-                        print(f"    Extending trajectory {prev_spots.traj_num[neighbour]}")
                         self.traj_num[i] = prev_spots.traj_num[neighbour]
                 else:
                     self.traj_num[i] = next_trajectory
                     next_trajectory += 1
-                    print(f"    Creating trajectory {self.traj_num[i]}")
                 break
 
             if self.traj_num[i] == -1:
@@ -209,7 +206,6 @@ class Spots:
             bgintensity = np.mean(tmp[spotmask==0])
             tmp = tmp - bgintensity
             intensity = np.sum(tmp[spotmask==1])
-            print(intensity)
             self.spot_intensity[i] = intensity
             
 #EJH#     def link():
@@ -284,7 +280,6 @@ class Spots:
                 p_estimate_new[1] = np.sum(spot_gaussian_product*Ys) / np.sum(spot_gaussian_product)
                 estimate_change = np.linalg.norm(p_estimate - p_estimate_new)
 
-#EJH#                 print(f"Spot {i_spot}: new position = {p_estimate_new}. Change of {estimate_change}")
                 p_estimate = p_estimate_new
 
                 spot_intensity = np.sum(bg_corr_spot_pixels * inner_mask)
@@ -292,7 +287,6 @@ class Spots:
 
                 if estimate_change < 1e-6:
                     converged = True
-#EJH#                     print(f"Converged! Continue: {not converged and iteration < params.gauss_mask_max_iter}")
 
                 # Calculate background corrected sub-image
 
@@ -300,9 +294,8 @@ class Spots:
 
             self.bg_intensity[i_spot] = bg_average
             self.spot_intensity[i_spot] = spot_intensity
-            self.snr[i_spot] = abs(spot_intensity / (bg_std*num_bg_spots))
+            self.snr[i_spot] = abs(spot_intensity / (bg_std))
             
-#EJH#             print(f"{frame}\t{i_spot}\t{p_estimate}\t{bg_average}\t{spot_intensity}\t{self.snr[i_spot]}")
             if converged:
                 self.positions[i_spot,:] = p_estimate
 

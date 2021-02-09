@@ -77,7 +77,6 @@ class Parameters:
         for arg in args[3:]:
             key, value = arg.split("=", 2)
             try:
-                print(f"Setting {key} to {value}")
                 # use isinstance
                 if type(getattr(self,key)) is type(0):
                     setattr(self, key, int(value))
@@ -99,5 +98,3 @@ class Parameters:
 
             if key == "pixelSize":
                 self.PSFwidth = 0.160/self.pixelSize
-
-            print(f"Using {key} = {getattr(self,key)}")
