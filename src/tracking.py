@@ -31,7 +31,6 @@ def track(image_data, params):
     # For each frame, detect spots
     all_spots = []
     for frame in range(image_data.num_frames):
-        if params.verbose: print(f"Tracking frame {frame+1} of {image_data.num_frames}")
 
         # Isolate this frame's data
         frame_data = image_data[frame]
@@ -41,22 +40,20 @@ def track(image_data, params):
         frame_spots = spots.Spots(frame=frame)
         frame_spots.find_in_frame(frame_data.as_image()[:,:], params)
 
-        if params.verbose: print(f"    {frame_spots.num_spots} candidates found")
         frame_spots.merge_coincident_candidates()
-        if params.verbose: print(f"    {frame_spots.num_spots} candidates found after merging")
 
 
         # Iteratively refine the spot centres
         frame_spots.refine_centres(frame_data, params)
 
         frame_spots.filter_candidates(params)
-        if params.verbose: print(f"    {frame_spots.num_spots} candidates found after filtering")
 
+        print(f"Frame {frame}: found {frame_spots.num_spots} spots")
         if params.render_image:
             frame_data.render(params, spot_positions=frame_spots.positions)
 
         all_spots.append(frame_spots)
-        frame_spots.get_spot_intensities(frame_data.as_image()[0,:,:])
+        frame_spots.get_spot_intensities(frame_data.as_image()[:,:])
 
     # Link the spot trajectories across the frames
     trajs = trajectories.build_trajectories(all_spots, params)

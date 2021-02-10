@@ -94,14 +94,14 @@ def simulate_stepwise_bleaching(params):
     n_mols = random.randint(1,10,params.num_spots)
     
     # initialise the spot co-ords
-    real_spots[0].positions[:,0] = random.rand(params.num_spots) * params.resolution[0]
-    real_spots[0].positions[:,1] = random.rand(params.num_spots) * params.resolution[1]
+    real_spots[0].positions[:,0] = random.rand(params.num_spots) * params.frame_size[0]
+    real_spots[0].positions[:,1] = random.rand(params.num_spots) * params.frame_size[1]
     real_spots[0].spot_intensity[:] = params.Isingle
     real_spots[0].frame = 1
 
     # Simulate the image stack
     image = ImageData()
-    image.initialise(params.num_frames, params.resolution)
+    image.initialise(params.num_frames, params.frame_size)
     # Simulate diffusion
     S = 0
     frame_start = 0
@@ -118,9 +118,9 @@ def simulate_stepwise_bleaching(params):
                 for j in range(n_mols[i]):
                     if random.rand() < params.p_bleach_per_frame: n_mols[i] -= 1
 
-    x_pos, y_pos = np.meshgrid(range(params.resolution[1]), range(params.resolution[0]))
+    x_pos, y_pos = np.meshgrid(range(params.frame_size[1]), range(params.frame_size[0]))
     for frame in range(params.num_frames):
-        frame_data = np.zeros(image.resolution).astype(np.uint16)
+        frame_data = np.zeros(image.frame_size).astype(np.uint16)
 
         for spot in range(params.num_spots):
             frame_data += ((real_spots[frame].spot_intensity[spot]/(2*np.pi*params.PSFwidth)) \
@@ -130,7 +130,7 @@ def simulate_stepwise_bleaching(params):
                                 )).astype(np.uint16)
 
         frame_data = random.poisson(frame_data)
-        bg_noise = random.normal(params.BGmean, params.BGstd, params.resolution)
+        bg_noise = random.normal(params.BGmean, params.BGstd, params.frame_size)
         frame_data += np.where(bg_noise > 0, bg_noise.astype(np.uint16), 0)
         image[frame] = frame_data
 
