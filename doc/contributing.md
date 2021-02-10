@@ -1,11 +1,11 @@
 # Contributing to SMT-Python
 
-If you make changes to SMT-Python, you are free to contribtue them back into the
+If you make changes to SMT-Python, you are free to contribute them back into the
 main codebase so that other people can make use of them too. In order to do
 this, make your changes to the source code in a new branch and create a pull
 request to get those changes merged back into the `master` branch.
 
-## TLDR
+## SYNOPSIS
 ```bash
 $ git clone https://www.github.com/ejh516/smt-python
 $ git checkout -b new-feature-name
@@ -47,8 +47,13 @@ practice to develop your changes in a separate branch. These changes can then
 be merged back into the master branch once they are complete. To create a new
 branch, use the command:
 ```bash
-$ git checkout -b meaningful-branch-name
+$ git checkout -b <branch-name>
 ```
+Here, `<branch-name>` is the name you want to give your new branch, and `-b`
+tells git to create a new branch for it. It's a good idea to use a relatively
+short (fewer than 32 characters) branch name which describes what the branch
+adds. For example, a branch to add the calculation of diffusion coefficients
+could be called `diffusion-coefficients`.
 
 Now, any commits you make will now exist in this branch. If all your changes are
 committed, you can even roll back to the unmodified version, or start working on
@@ -58,3 +63,22 @@ $ git checkout master
 $ git checkout -b different-new-feature
 ```
 
+If you want to push your branch back to the GitHub repository, you can do that
+with the command:
+```bash
+$ git push origin <branch-name>
+```
+
+## Creating a pull request
+Once your changes are complete, you can create a *pull request*. This is a
+request for the `master` branch to _pull_ in your changes.
+
+If you haven't yet done this, you will need to push your branch back to GitHub.
+Once you've done that, go to https://github.com/ejh516/smt-python and select the
+`Pull requests` tab. Choose `New pull request` and select your branch.
+
+This will allow you to create a request for one of the other developers to
+review your changes. If they have any questions or comments, they can put them
+to you and you will have the chance to make new commits to your branch. Once the
+reviewer is happy, they will merge it into the `master` branch, and the process
+is complete!
