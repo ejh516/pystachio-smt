@@ -34,7 +34,7 @@ class Spots:
         if num_spots > 0:
             self.positions = np.zeros([num_spots, 2])
             self.clipping = [False] * num_spots
-            self.bg_intensity = np.zeros(num_spots) 
+            self.bg_intensity = np.zeros(num_spots)
             self.spot_intensity =  np.zeros(num_spots)
             self.centre_intensity =  np.zeros(num_spots)
             self.width = np.zeros([num_spots,2])
@@ -46,12 +46,11 @@ class Spots:
             self.frame = frame
             self.initialised = False
 
-
     def set_positions(self, positions):
         self.num_spots = len(positions)
         self.positions = np.zeros([self.num_spots, 2])
         self.clipping = [False] * self.num_spots
-        self.bg_intensity = np.zeros(self.num_spots) 
+        self.bg_intensity = np.zeros(self.num_spots)
         self.spot_intensity =  np.zeros(self.num_spots)
         self.centre_intensity =  np.zeros(self.num_spots)
         self.width = np.zeros([self.num_spots,2])
@@ -112,7 +111,7 @@ class Spots:
                 continue
 
             for j in range(i+1,self.num_spots):
-                if np.linalg.norm(self.positions[i,:] - self.positions[j,:]) < 2:
+                if sum((self.positions[i,:] - self.positions[j,:])**2) < 4:
                     skip.append(j)
                     tmp_positions.append(self.positions[j,:])
 
@@ -207,18 +206,12 @@ class Spots:
             tmp = tmp - bgintensity
             intensity = np.sum(tmp[spotmask==1])
             self.spot_intensity[i] = intensity
-            
-#EJH#     def link():
-#EJH#         return False
-#EJH# 
-#EJH#     def find_centre():
-#EJH#         return False
 
     def refine_centres(self, frame, params):
         image = frame.as_image()
         # Refine the centre of each spot independently
         for i_spot in range(self.num_spots):
-            r = params.subarray_halfwidth 
+            r = params.subarray_halfwidth
             N = 2*r + 1
 
             # Get the centre estimate, make sure the spot_region fits in the frame
@@ -247,11 +240,12 @@ class Spots:
             clipping = False
             spot_intensity = 0
             bg_intensity = 0
+            snr = 0
             while not converged and iteration < params.gauss_mask_max_iter:
                 iteration += 1
 
                 # Generate the inner mask
-                inner_mask = np.where((coords[0,:,:]-p_estimate[0])**2 + (coords[1,:,:]-p_estimate[1])**2 
+                inner_mask = np.where((coords[0,:,:]-p_estimate[0])**2 + (coords[1,:,:]-p_estimate[1])**2
                                       <= params.inner_mask_radius**2, 1, 0)
                 mask_pixels = np.sum(inner_mask)
 
@@ -270,11 +264,12 @@ class Spots:
                 spot_bg = spot_pixels * bg_mask
                 num_bg_spots = np.sum(bg_mask)
                 bg_average = np.sum(spot_bg) / num_bg_spots
+
+                # Calculate background corrected sub-image
                 bg_corr_spot_pixels = spot_pixels - bg_average
 
+                # Calculate revised position estimate
                 spot_gaussian_product = bg_corr_spot_pixels * gauss_mask
-
-
                 p_estimate_new = np.zeros(2)
                 p_estimate_new[0] = np.sum(spot_gaussian_product*Xs) / np.sum(spot_gaussian_product)
                 p_estimate_new[1] = np.sum(spot_gaussian_product*Ys) / np.sum(spot_gaussian_product)
@@ -288,21 +283,15 @@ class Spots:
                 if estimate_change < 1e-6:
                     converged = True
 
-                # Calculate background corrected sub-image
-
-                # Calculate revised position estimate
+                # Calculate signal-noise ratio
+                # Don't bother reiterating this spot if it's too low
+                snr = abs(spot_intensity / (bg_std))
+                if self.snr[i_spot] <= params.snr_filter_cutoff:
+                    break
 
             self.bg_intensity[i_spot] = bg_average
             self.spot_intensity[i_spot] = spot_intensity
-            self.snr[i_spot] = abs(spot_intensity / (bg_std))
-            
+            self.snr[i_spot] = snr
+
             if converged:
                 self.positions[i_spot,:] = p_estimate
-
-            if self.snr[i_spot] < 0.5:
-                self.positions[i_spot,:] = 0
-
-#EJH#             plt.imshow(spot_pixels)
-#EJH#             plt.colorbar()
-#EJH#             plt.scatter([p_estimate[0] - spot_region[0,0]], [p_estimate[1] - spot_region[1,0]])
-#EJH#             plt.show()
