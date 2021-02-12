@@ -46,7 +46,7 @@ class Parameters:
         self.filter_image = "gaussian"
         self.disk_radius = 5
         self.bw_threshold_tolerance = 1.0
-        self.snr_filter_cutoff = 0.5
+        self.snr_filter_cutoff = 40
 
         self.max_displacement = 5.0
         # Initialise
@@ -54,21 +54,27 @@ class Parameters:
         self.Isingle = 10000.0
         self.BGmean = 500.0 # mean background pixel intensity
         self.BGstd = 120.0 # standard deviation of background pixels
-        self.num_frames = 10
+        self.num_frames = 100
         self.frame_size = [64, 64]
         self.bleach_time = 10 # in frames, if 0 then no bleaching
         self.diffusionCoeff = 1.0 # um2/s
+
+        self.max_spot_molecules = 10
         self.nDiffPoints = 4 # number of MSD points to calculate diffusion const
         self.frameTime = 0.005 # seconds
         self.pixelSize = 0.120 # microns
         self.PSFwidth = 0.160/self.pixelSize # Sigma of a Gaussian, ~2/3 airy disk diameter
+        self.MSD_num_points = 4
 
-        self.p_bleach_per_frame = 0.25
+        self.p_bleach_per_frame = 0.05
 
         self.subarray_halfwidth = 5
         self.inner_mask_radius = 3
         self.gauss_mask_sigma = 2
         self.gauss_mask_max_iter = 100
+        
+        self.stoic_method = 'linear_fit'
+        self.num_stoic_frames = 3
 
     def read(self, args):
         self.task = args[1]

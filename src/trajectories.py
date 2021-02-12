@@ -38,6 +38,7 @@ class Trajectory:
         self.intensity =  [spots.spot_intensity[spot_id]]
         self.snr =  [spots.snr[spot_id]]
         self.length = 1
+        self.stoichiometry = 0
 
     def extend(self, spots, spot_id):
         if spots.frame > self.end_frame + 1: 
