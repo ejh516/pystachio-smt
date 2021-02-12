@@ -22,29 +22,30 @@ Author:
 Version: 0.2.0
 """
 
-import tifffile
 import sys
 
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import cv2 as cv
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+import numpy as np
+import tifffile
 
-class ImageData():
+
+class ImageData:
     def __init__(self):
         self.defined = False
 
     def __getitem__(self, index):
         frame = ImageData()
         frame.initialise(1, self.frame_size)
-        frame.pixel_data[0,:,:] = self.pixel_data[index,:,:]
+        frame.pixel_data[0, :, :] = self.pixel_data[index, :, :]
         return frame
 
     def __setitem__(self, index, value):
         if value.__class__ == "ImageData":
-            self.pixel_data[index,:,:] = value.pixel_data[0,:,:]
+            self.pixel_data[index, :, :] = value.pixel_data[0, :, :]
         else:
-            self.pixel_data[index,:,:] = value
+            self.pixel_data[index, :, :] = value
 
     def initialise(self, num_frames, frame_size):
         self.num_frames = num_frames
@@ -58,7 +59,7 @@ class ImageData():
     def as_image(self, frame=0, drop_dim=True):
 
         if drop_dim:
-            img = self.pixel_data.astype(np.uint16)[frame,:,:]
+            img = self.pixel_data.astype(np.uint16)[frame, :, :]
         else:
             img = self.pixel_data.astype(np.uint16)
         return img
@@ -86,7 +87,7 @@ class ImageData():
     def rotate(self, angle):
         if angle % 90 == 0:
             for frame in self.num_frames:
-                np.rot90(self.pixel_data[frame,:,:], angle//90)
+                np.rot90(self.pixel_data[frame, :, :], angle // 90)
 
         else:
             sys.exit("ERROR: Images can only be rotated by multiples of 90°")
@@ -108,16 +109,26 @@ class ImageData():
         plt_frames = []
 
         for frame in range(self.num_frames):
-            plt_frame = plt.imshow(self.pixel_data[frame,:,:], animated=True, vmin=0, vmax=maxval, 
-                    extent=[0, self.frame_size[0]*params.pixelSize, 0, self.frame_size[1]*params.pixelSize])
+            plt_frame = plt.imshow(
+                self.pixel_data[frame, :, :],
+                animated=True,
+                vmin=0,
+                vmax=maxval,
+                extent=[
+                    0,
+                    self.frame_size[0] * params.pixelSize,
+                    0,
+                    self.frame_size[1] * params.pixelSize,
+                ],
+            )
             if len(spot_positions) > 0:
-                [x,y] = zip(*spot_positions)
+                [x, y] = zip(*spot_positions)
                 x_scaled = []
                 y_scaled = []
                 for i in range(len(x)):
-                    x_scaled.append((params.frame_size[0]-x[i]) * params.pixelSize)
+                    x_scaled.append((params.frame_size[0] - x[i]) * params.pixelSize)
                     y_scaled.append(y[i] * params.pixelSize)
-                plt.scatter(y_scaled,x_scaled,c="r")
+                plt.scatter(y_scaled, x_scaled, c="r")
 
             plt_frames.append([plt_frame])
 

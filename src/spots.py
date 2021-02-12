@@ -21,12 +21,14 @@ Author:
 Version: 0.2.0
 """
 
-import numpy as np
-import cv2
-import matplotlib.pyplot as plt
 import sys
 
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
 from algorithms import *
+
 
 class Spots:
     def __init__(self, num_spots=0, frame=0):
@@ -35,9 +37,9 @@ class Spots:
             self.positions = np.zeros([num_spots, 2])
             self.clipping = [False] * num_spots
             self.bg_intensity = np.zeros(num_spots)
-            self.spot_intensity =  np.zeros(num_spots)
-            self.centre_intensity =  np.zeros(num_spots)
-            self.width = np.zeros([num_spots,2])
+            self.spot_intensity = np.zeros(num_spots)
+            self.centre_intensity = np.zeros(num_spots)
+            self.width = np.zeros([num_spots, 2])
             self.frame = frame
             self.traj_num = [-1] * self.num_spots
             self.snr = np.zeros([num_spots])
@@ -51,54 +53,61 @@ class Spots:
         self.positions = np.zeros([self.num_spots, 2])
         self.clipping = [False] * self.num_spots
         self.bg_intensity = np.zeros(self.num_spots)
-        self.spot_intensity =  np.zeros(self.num_spots)
-        self.centre_intensity =  np.zeros(self.num_spots)
-        self.width = np.zeros([self.num_spots,2])
+        self.spot_intensity = np.zeros(self.num_spots)
+        self.centre_intensity = np.zeros(self.num_spots)
+        self.width = np.zeros([self.num_spots, 2])
         self.traj_num = [-1] * self.num_spots
         self.snr = np.zeros([self.num_spots])
 
         for i in range(self.num_spots):
-            self.positions[i,:] = positions[i]
-
-
+            self.positions[i, :] = positions[i]
 
     def find_in_frame(self, frame, params):
         img_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # Get structural element (map with disk of ones in a square of 0s) [strel]
-        disk_size = 2*params.disk_radius - 1
-        disk_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(disk_size, disk_size))
+        disk_size = 2 * params.disk_radius - 1
+        disk_kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (disk_size, disk_size)
+        )
 
         # Optionally apply gaussian filtering to the frame
         if params.filter_image == "gaussian":
-            blurred_frame =cv2.GaussianBlur(img_frame,(3,3),0)
+            blurred_frame = cv2.GaussianBlur(img_frame, (3, 3), 0)
         else:
             blurred_frame = img_frame.copy()
 
         # Apply top-hat filtering [imtophat]
         tophatted_frame = cv2.morphologyEx(blurred_frame, cv2.MORPH_TOPHAT, disk_kernel)
 
-
         # Get b/w threshold value from the histogram
-        hist_data = cv2.calcHist([tophatted_frame], [0], None, [256], [0,256])
+        hist_data = cv2.calcHist([tophatted_frame], [0], None, [256], [0, 256])
         hist_data[0] = 0
 
         peak_width, peak_location = fwhm(hist_data)
-        bw_threshold = int(peak_location + params.bw_threshold_tolerance*peak_width)
+        bw_threshold = int(peak_location + params.bw_threshold_tolerance * peak_width)
 
         # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
-        blurred_tophatted_frame =cv2.GaussianBlur(tophatted_frame,(3,3),0)
+        blurred_tophatted_frame = cv2.GaussianBlur(tophatted_frame, (3, 3), 0)
 
         # Convert the filtered image to b/w [im2bw]
-        bw_frame = cv2.threshold(blurred_tophatted_frame, bw_threshold, 255, cv2.THRESH_BINARY)[1]
+        bw_frame = cv2.threshold(
+            blurred_tophatted_frame, bw_threshold, 255, cv2.THRESH_BINARY
+        )[1]
 
         # "Open" the b/w image (in a morphological sense) [imopen]
-        bw_opened = cv2.morphologyEx(bw_frame, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_CROSS, (3,3)))
+        bw_opened = cv2.morphologyEx(
+            bw_frame, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+        )
 
         # Fill holes ofsize 1 pixel in the resulting image [bwmorph]
-        bw_filled = cv2.morphologyEx(bw_opened, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3)))
+        bw_filled = cv2.morphologyEx(
+            bw_opened,
+            cv2.MORPH_CLOSE,
+            cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)),
+        )
 
-        spot_locations = ultimate_erode(bw_filled[:,:,0], frame)
+        spot_locations = ultimate_erode(bw_filled[:, :, 0], frame)
 
         self.set_positions(spot_locations)
 
@@ -106,16 +115,16 @@ class Spots:
         new_positions = []
         skip = []
         for i in range(self.num_spots):
-            tmp_positions = [self.positions[i,:]]
+            tmp_positions = [self.positions[i, :]]
             if i in skip:
                 continue
 
-            for j in range(i+1,self.num_spots):
-                if sum((self.positions[i,:] - self.positions[j,:])**2) < 4:
+            for j in range(i + 1, self.num_spots):
+                if sum((self.positions[i, :] - self.positions[j, :]) ** 2) < 4:
                     skip.append(j)
-                    tmp_positions.append(self.positions[j,:])
+                    tmp_positions.append(self.positions[j, :])
 
-            p = [0,0]
+            p = [0, 0]
             for pos in tmp_positions:
                 p[0] += pos[0]
                 p[1] += pos[1]
@@ -130,20 +139,20 @@ class Spots:
         positions = []
         clipping = []
         bg_intensity = []
-        spot_intensity =  []
-        centre_intensity =  []
+        spot_intensity = []
+        centre_intensity = []
         width = []
         traj_num = []
         snr = []
 
         for i in range(self.num_spots):
             if self.snr[i] > params.snr_filter_cutoff:
-                positions.append(self.positions[i,:])
+                positions.append(self.positions[i, :])
                 clipping.append(self.clipping[i])
                 bg_intensity.append(self.bg_intensity[i])
                 spot_intensity.append(self.spot_intensity[i])
                 centre_intensity.append(self.centre_intensity[i])
-                width.append(self.width[i,:])
+                width.append(self.width[i, :])
                 traj_num.append(self.traj_num[i])
                 snr.append(self.snr[i])
 
@@ -151,8 +160,8 @@ class Spots:
         self.positions = np.array(positions)
         self.clipping = np.array(clipping)
         self.bg_intensity = np.array(bg_intensity)
-        self.spot_intensity =  np.array(spot_intensity)
-        self.centre_intensity =  np.array(centre_intensity)
+        self.spot_intensity = np.array(spot_intensity)
+        self.centre_intensity = np.array(centre_intensity)
         self.width = np.array(width)
         self.traj_num = np.array(traj_num)
         self.snr = np.array(snr)
@@ -162,7 +171,9 @@ class Spots:
 
         for i in range(self.num_spots):
             for j in range(other.num_spots):
-                distances[i,j] = np.linalg.norm(self.positions[i,:] - other.positions[j,:])
+                distances[i, j] = np.linalg.norm(
+                    self.positions[i, :] - other.positions[j, :]
+                )
 
         return distances
 
@@ -173,13 +184,13 @@ class Spots:
         distances = self.distance_from(prev_spots)
 
         assigned = []
-        neighbours = np.argsort(distances[:,:], axis=1)
+        neighbours = np.argsort(distances[:, :], axis=1)
         paired_spots = []
-        next_trajectory = max(prev_spots.traj_num)+1
+        next_trajectory = max(prev_spots.traj_num) + 1
         for i in range(self.num_spots):
             for j in range(prev_spots.num_spots):
-                neighbour = neighbours[i,j]
-                if (distances[i,neighbour] < params.max_displacement):
+                neighbour = neighbours[i, j]
+                if distances[i, neighbour] < params.max_displacement:
                     if neighbour in paired_spots:
                         continue
                     else:
@@ -193,18 +204,19 @@ class Spots:
             if self.traj_num[i] == -1:
                 sys.exit(f"Unable to find a match for spot {i}, frame {self.frame}")
 
-
     def get_spot_intensities(self, frame):
         for i in range(self.num_spots):
-            x = int(self.positions[i,0])
-            y = int(self.positions[i,1])
-            #Create a tmp array with the centre of the spot in the centre
-            tmp = frame[x-8:x+9,y-8:y+9] # ED: is this right? or should be other way round?
+            x = int(self.positions[i, 0])
+            y = int(self.positions[i, 1])
+            # Create a tmp array with the centre of the spot in the centre
+            tmp = frame[
+                x - 8 : x + 9, y - 8 : y + 9
+            ]  # ED: is this right? or should be other way round?
             spotmask = np.zeros(tmp.shape)
-            cv2.circle(spotmask, (8,8), 5, 1, -1)
-            bgintensity = np.mean(tmp[spotmask==0])
+            cv2.circle(spotmask, (8, 8), 5, 1, -1)
+            bgintensity = np.mean(tmp[spotmask == 0])
             tmp = tmp - bgintensity
-            intensity = np.sum(tmp[spotmask==1])
+            intensity = np.sum(tmp[spotmask == 1])
             self.spot_intensity[i] = intensity
 
     def refine_centres(self, frame, params):
@@ -212,28 +224,38 @@ class Spots:
         # Refine the centre of each spot independently
         for i_spot in range(self.num_spots):
             r = params.subarray_halfwidth
-            N = 2*r + 1
+            N = 2 * r + 1
 
             # Get the centre estimate, make sure the spot_region fits in the frame
-            p_estimate = self.positions[i_spot,:]
-            for d in (0,1):
+            p_estimate = self.positions[i_spot, :]
+            for d in (0, 1):
                 if p_estimate[d] - r < 0:
                     p_estimate[d] = r
-                elif p_estimate[d] + r+1 >= frame.frame_size[d]:
-                    p_estimate[d] = frame.frame_size[d]-r-1
+                elif p_estimate[d] + r + 1 >= frame.frame_size[d]:
+                    p_estimate[d] = frame.frame_size[d] - r - 1
 
             # Create the sub-image
-            spot_region = np.array([[round(p_estimate[0])-r, round(p_estimate[0])+r],
-                                    [round(p_estimate[1])-r, round(p_estimate[1])+r]]).astype(int)
+            spot_region = np.array(
+                [
+                    [round(p_estimate[0]) - r, round(p_estimate[0]) + r],
+                    [round(p_estimate[1]) - r, round(p_estimate[1]) + r],
+                ]
+            ).astype(int)
 
-            spot_pixels = image[spot_region[0,0]:spot_region[0,1]+1,
-                                spot_region[1,0]:spot_region[1,1]+1]
+            spot_pixels = image[
+                spot_region[0, 0] : spot_region[0, 1] + 1,
+                spot_region[1, 0] : spot_region[1, 1] + 1,
+            ]
 
-            coords = np.mgrid[spot_region[0,0]:spot_region[0,1]+1,
-                              spot_region[1,0]:spot_region[1,1]+1]
+            coords = np.mgrid[
+                spot_region[0, 0] : spot_region[0, 1] + 1,
+                spot_region[1, 0] : spot_region[1, 1] + 1,
+            ]
 
-            Xs,Ys  = np.meshgrid(range(spot_region[0,0], spot_region[0,1]+1),
-                                 range(spot_region[1,0], spot_region[1,1]+1))
+            Xs, Ys = np.meshgrid(
+                range(spot_region[0, 0], spot_region[0, 1] + 1),
+                range(spot_region[1, 0], spot_region[1, 1] + 1),
+            )
 
             converged = False
             iteration = 0
@@ -245,20 +267,29 @@ class Spots:
                 iteration += 1
 
                 # Generate the inner mask
-                inner_mask = np.where((coords[0,:,:]-p_estimate[0])**2 + (coords[1,:,:]-p_estimate[1])**2
-                                      <= params.inner_mask_radius**2, 1, 0)
+                inner_mask = np.where(
+                    (coords[0, :, :] - p_estimate[0]) ** 2
+                    + (coords[1, :, :] - p_estimate[1]) ** 2
+                    <= params.inner_mask_radius ** 2,
+                    1,
+                    0,
+                )
                 mask_pixels = np.sum(inner_mask)
 
                 # Generate the Gaussian mask
                 # This uses Numpy magic, it's almost as bad as the MATLAB...
-                coords_sq = (coords[:,:,:] - p_estimate[:,np.newaxis,np.newaxis])**2
-                exponent  = -(coords_sq[0,:,:] + coords_sq[1,:,:])/(2*params.gauss_mask_sigma**2)
+                coords_sq = (
+                    coords[:, :, :] - p_estimate[:, np.newaxis, np.newaxis]
+                ) ** 2
+                exponent = -(coords_sq[0, :, :] + coords_sq[1, :, :]) / (
+                    2 * params.gauss_mask_sigma ** 2
+                )
                 gauss_mask = np.exp(exponent)
 
                 if np.sum(gauss_mask) != 0:
                     gauss_mask /= np.sum(gauss_mask)
 
-                bg_mask = 1-inner_mask
+                bg_mask = 1 - inner_mask
 
                 # Calculate the local background intensity and subtract it off the sub-image
                 spot_bg = spot_pixels * bg_mask
@@ -271,14 +302,18 @@ class Spots:
                 # Calculate revised position estimate
                 spot_gaussian_product = bg_corr_spot_pixels * gauss_mask
                 p_estimate_new = np.zeros(2)
-                p_estimate_new[0] = np.sum(spot_gaussian_product*Xs) / np.sum(spot_gaussian_product)
-                p_estimate_new[1] = np.sum(spot_gaussian_product*Ys) / np.sum(spot_gaussian_product)
+                p_estimate_new[0] = np.sum(spot_gaussian_product * Xs) / np.sum(
+                    spot_gaussian_product
+                )
+                p_estimate_new[1] = np.sum(spot_gaussian_product * Ys) / np.sum(
+                    spot_gaussian_product
+                )
                 estimate_change = np.linalg.norm(p_estimate - p_estimate_new)
 
                 p_estimate = p_estimate_new
 
                 spot_intensity = np.sum(bg_corr_spot_pixels * inner_mask)
-                bg_std = np.sqrt(np.sum(spot_bg**2)/num_bg_spots - bg_average**2)
+                bg_std = np.sqrt(np.sum(spot_bg ** 2) / num_bg_spots - bg_average ** 2)
 
                 if estimate_change < 1e-6:
                     converged = True
@@ -294,4 +329,4 @@ class Spots:
             self.snr[i_spot] = snr
 
             if converged:
-                self.positions[i_spot,:] = p_estimate
+                self.positions[i_spot, :] = p_estimate
