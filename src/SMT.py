@@ -50,9 +50,6 @@ def main():
             calculated_isingle = postprocessing.get_isingle(intensities)
             dc, lp = postprocessing.get_diffusion_coef(trajs, params)
             print(np.mean(dc))
-            fname = "../data/diffcoefs_"+str(params.diffusionCoeff)+".txt"
-            with open(fname, "a") as myfile:
-                myfile.write(str(np.mean(dc))+"\n")
             postprocessing.plot_traj_intensities(trajs)
             postprocessing.get_stoichiometries(trajs, calculated_isingle, params)
             
