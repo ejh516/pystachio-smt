@@ -91,7 +91,7 @@ def simulate_stepwise_bleaching(params):
 
     # Make a spot array the same size as normal
     real_spots = [Spots(params.num_spots) for i in range(params.num_frames)]
-    n_mols = random.randint(1,10,params.num_spots)
+    n_mols = random.randint(1,params.max_spot_molecules,params.num_spots)
     
     # initialise the spot co-ords
     real_spots[0].positions[:,0] = random.rand(params.num_spots) * params.frame_size[0]

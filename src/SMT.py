@@ -47,10 +47,14 @@ def main():
             for i in range(len(spots)):
                 tmp = spots[i].spot_intensity
                 intensities = np.concatenate((intensities,tmp))
-            postprocessing.get_isingle(intensities)
-            diff_coef, diff_coef_loc_precision  = postprocessing.get_diffusion_coef(trajs, params)
-            print(np.mean(diff_coef))
-            postprocessing.plot_traj_intensities(spots)
+            calculated_isingle = postprocessing.get_isingle(intensities)
+            dc, lp = postprocessing.get_diffusion_coef(trajs, params)
+            print(np.mean(dc))
+            fname = "../data/diffcoefs_"+str(params.diffusionCoeff)+".txt"
+            with open(fname, "a") as myfile:
+                myfile.write(str(np.mean(dc))+"\n")
+            postprocessing.plot_traj_intensities(trajs)
+            postprocessing.get_stoichiometries(trajs, calculated_isingle, params)
             
         elif task == "simulate":
             image_data = simulation.simulate(params)
