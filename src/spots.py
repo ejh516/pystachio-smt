@@ -286,7 +286,7 @@ class Spots:
                 # Calculate signal-noise ratio
                 # Don't bother reiterating this spot if it's too low
                 snr = abs(spot_intensity / (bg_std))
-                if self.snr[i_spot] <= params.snr_filter_cutoff:
+                if snr <= params.snr_filter_cutoff:
                     break
 
             self.bg_intensity[i_spot] = bg_average
