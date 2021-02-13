@@ -80,6 +80,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    with open("/proc/self/status") as f:
-        print(f.read())
 
