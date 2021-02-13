@@ -24,15 +24,14 @@ Version: 0.2.0
 
 import tifffile
 import sys
+import os
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import cv2 as cv
 
 class ImageData():
     def __init__(self):
-        self.defined = False
+        self.exists = False
 
     def __getitem__(self, index):
         frame = ImageData()
@@ -53,7 +52,7 @@ class ImageData():
 
         self.pixel_data = np.zeros([num_frames, frame_size[0], frame_size[1]])
 
-        self.defined = True
+        self.exists = True
 
     def as_image(self, frame=0, drop_dim=True):
 
@@ -63,7 +62,15 @@ class ImageData():
             img = self.pixel_data.astype(np.uint16)
         return img
 
-    def read(self, filename):
+    def read(self, seed_name):
+        # Determine the filename from the seedname
+        if os.path.isfile(seed_name):
+            filename = seed_name
+        elif os.path.isfile(seed_name + ".tif"):
+            filename = seed_name + ".tif"
+        else:
+            sys.abort(f"Unable to find file matching '{seed_name}'")
+
         # Read in the file and get the data size
         pixel_data = tifffile.imread(filename)
         self.num_frames = pixel_data.shape[0]
@@ -75,7 +82,7 @@ class ImageData():
 
         self.determine_first_frame()
 
-        self.defined = True
+        self.exists = True
 
     def write(self, params):
         # Create the data array
@@ -99,31 +106,3 @@ class ImageData():
 
         return max_intensity
 
-    def render(self, params, spot_positions=None):
-        spot_positions = [] if spot_positions is None else spot_positions
-        print(spot_positions)
-
-        maxval = self.max_intensity()
-        figure = plt.figure()
-        plt_frames = []
-
-        for frame in range(self.num_frames):
-            plt_frame = plt.imshow(self.pixel_data[frame,:,:], animated=True, vmin=0, vmax=maxval, 
-                    extent=[0, self.frame_size[0]*params.pixelSize, 0, self.frame_size[1]*params.pixelSize])
-            if len(spot_positions) > 0:
-                [x,y] = zip(*spot_positions)
-                x_scaled = []
-                y_scaled = []
-                for i in range(len(x)):
-                    x_scaled.append((params.frame_size[0]-x[i]) * params.pixelSize)
-                    y_scaled.append(y[i] * params.pixelSize)
-                plt.scatter(y_scaled,x_scaled,c="r")
-
-            plt_frames.append([plt_frame])
-
-        video = animation.ArtistAnimation(figure, plt_frames, interval=50)
-        plt.title("Simulated spot data")
-        plt.xlabel("μm")
-        plt.ylabel("μm")
-        plt.colorbar()
-        plt.show()
