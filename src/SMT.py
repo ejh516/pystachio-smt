@@ -10,7 +10,7 @@
 
 Description:
     SMT.py contains the main program used for running SMT-Python
- 
+
 Contains:
     function main
 
@@ -28,46 +28,57 @@ import images
 import parameters
 import postprocessing
 import simulation
+import state
 import tracking
+
 
 
 def main():
     params = parameters.Parameters()
     params.read(sys.argv)
 
+    st = state.State(params)
+
     for task in params.task:
         if task == "track":
-            image_data = images.ImageData()
-            image_data.read(params.seed_name + ".tif")
 
-            if params.verbose:
-                print(f"Loaded {image_data.num_frames} frames from {params.seed_name}")
-                print(f"Resolution: {image_data.frame_size}")
+            st.image_data = images.ImageData()
+            st.image_data.read(params.seed_name)
 
-            spots, trajs = tracking.track(image_data, params)
-            intensities = np.array([])
-            for i in range(len(spots)):
-                tmp = spots[i].spot_intensity
-                intensities = np.concatenate((intensities, tmp))
-            calculated_isingle = postprocessing.get_isingle(intensities)
-            dc, lp = postprocessing.get_diffusion_coef(trajs, params)
-            print(np.mean(dc))
-            postprocessing.plot_traj_intensities(trajs)
-            postprocessing.get_stoichiometries(trajs, calculated_isingle, params)
+            st.spots, st.trajectories = tracking.track(st.image_data, st.parameters)
 
         elif task == "simulate":
-            image_data = simulation.simulate(params)
-            # EJH#             spot_data.write(params)
-            image_data.write(params)
+            st.image_data = simulation.simulate(st.parameters)
+#EJH#             spot_data.write(params)
+            st.image_data.write(st.parameters)
 
-        elif task == "simulate_stepwise":
-            image_data = simulation.simulate_stepwise_bleaching(params)
-            image_data.write(params)
+        elif task=="simulate_stepwise":
+            st.image_data = simulation.simulate_stepwise_bleaching(st.parameters)
+            st.image_data.write(st.parameters)
+
+        elif task == "postprocess":
+            intensities = np.array([])
+            snrs = np.array([])
+            for i in range(len(st.spots)):
+                tmp = st.spots[i].spot_intensity
+                intensities = np.concatenate((intensities,tmp))
+                snrs = np.concatenate((snrs,st.spots[i].snr))
+
+            calculated_snr = postprocessing.plot_snr(snrs)
+
+            calculated_isingle = postprocessing.get_isingle(intensities)
+            dc, lp = postprocessing.get_diffusion_coef(st.trajectories, st.parameters)
+
+            print(np.mean(dc))
+
+            postprocessing.plot_traj_intensities(st.trajectories)
+            postprocessing.get_stoichiometries(st.trajectories, calculated_isingle, st.parameters)
 
         elif task == "view":
-            img = images.ImageData()
-            img.read(params.seed_name + ".tif")
-            img.render(params)
+            if not st.image_data.exists:
+               sys.exit(f"ERROR: No file loaded to view")
+
+            st.render()
 
         else:
             sys.exit(f"ERROR: Task {task} is not yet implemented. Aborting...")
@@ -75,3 +86,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -61,8 +61,9 @@ class Parameters:
         self.BGstd = 120.0  # standard deviation of background pixels
         self.num_frames = 100
         self.frame_size = [64, 64]
-        self.bleach_time = 10  # in frames, if 0 then no bleaching
-        self.diffusionCoeff = 1.0  # um2/s
+
+        self.bleach_time = 0 # in frames, if 0 then no bleaching
+        self.diffusionCoeff = 1.0 # um2/s
 
         self.max_spot_molecules = 10
         self.nDiffPoints = 4  # number of MSD points to calculate diffusion const

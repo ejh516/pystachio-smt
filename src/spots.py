@@ -44,9 +44,10 @@ class Spots:
             self.traj_num = [-1] * self.num_spots
             self.snr = np.zeros([num_spots])
             self.laser_on_frame = 0
+            self.exists = True
         else:
             self.frame = frame
-            self.initialised = False
+            self.exists = False
 
     def set_positions(self, positions):
         self.num_spots = len(positions)

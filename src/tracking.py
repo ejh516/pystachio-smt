@@ -57,9 +57,6 @@ def track(image_data, params):
             f"{merged_spots-frame_spots.num_spots:3d} filtered)"
         )
 
-        if params.render_image:
-            frame_data.render(params, spot_positions=frame_spots.positions)
-
         all_spots.append(frame_spots)
         frame_spots.get_spot_intensities(frame_data.as_image()[:, :])
 
