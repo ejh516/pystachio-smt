@@ -21,14 +21,17 @@ Version: 0.2.0
 """
 
 import sys
+
 import numpy as np
 
-import tracking
-import simulation
-import parameters
 import images
+import parameters
 import postprocessing
+import simulation
 import state
+import tracking
+
+
 
 def main():
     params = parameters.Parameters()
@@ -38,6 +41,7 @@ def main():
 
     for task in params.task:
         if task == "track":
+
             st.image_data = images.ImageData()
             st.image_data.read(params.seed_name)
 
@@ -61,10 +65,12 @@ def main():
                 snrs = np.concatenate((snrs,st.spots[i].snr))
 
             calculated_snr = postprocessing.plot_snr(snrs)
+
             calculated_isingle = postprocessing.get_isingle(intensities)
             dc, lp = postprocessing.get_diffusion_coef(st.trajectories, st.parameters)
 
             print(np.mean(dc))
+
             postprocessing.plot_traj_intensities(st.trajectories)
             postprocessing.get_stoichiometries(st.trajectories, calculated_isingle, st.parameters)
 

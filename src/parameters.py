@@ -24,18 +24,23 @@ Version: 0.2.0
 
 import sys
 
+
 class Parameters:
     def __init__(self):
-        self.verbose = True                 # Whether or not to display verbose console output
-        self.c_split = "None"               # How the channels are split
-        self.frames_to_track = 0            # How many frames to track after the laser has switched on
-        self.start_channel = 0              # First channel to use
-        self.end_channel = 0                # Last channel to use
-        self.ALEX = 0                       # Whether or not this is an ALEX experiment
-        self.use_cursor = False             # Whether or not to use the cursor
-        self.determine_first_frames = False # Are there blank frames before the shutter opens?
-        self.frame_avg_window = 5           # Number of frames to average over
-        self.sat_pixel_val = 10**10         # Value representing saturated pixels
+        self.verbose = True  # Whether or not to display verbose console output
+        self.c_split = "None"  # How the channels are split
+        self.frames_to_track = (
+            0  # How many frames to track after the laser has switched on
+        )
+        self.start_channel = 0  # First channel to use
+        self.end_channel = 0  # Last channel to use
+        self.ALEX = 0  # Whether or not this is an ALEX experiment
+        self.use_cursor = False  # Whether or not to use the cursor
+        self.determine_first_frames = (
+            False  # Are there blank frames before the shutter opens?
+        )
+        self.frame_avg_window = 5  # Number of frames to average over
+        self.sat_pixel_val = 10 ** 10  # Value representing saturated pixels
 
         self.task = ""
         self.verbose = True
@@ -52,18 +57,21 @@ class Parameters:
         # Initialise
         self.num_spots = 10
         self.Isingle = 10000.0
-        self.BGmean = 500.0 # mean background pixel intensity
-        self.BGstd = 120.0 # standard deviation of background pixels
+        self.BGmean = 500.0  # mean background pixel intensity
+        self.BGstd = 120.0  # standard deviation of background pixels
         self.num_frames = 100
         self.frame_size = [64, 64]
+
         self.bleach_time = 0 # in frames, if 0 then no bleaching
         self.diffusionCoeff = 1.0 # um2/s
 
         self.max_spot_molecules = 10
-        self.nDiffPoints = 4 # number of MSD points to calculate diffusion const
-        self.frameTime = 0.005 # seconds
-        self.pixelSize = 0.120 # microns
-        self.PSFwidth = 0.160/self.pixelSize # Sigma of a Gaussian, ~2/3 airy disk diameter
+        self.nDiffPoints = 4  # number of MSD points to calculate diffusion const
+        self.frameTime = 0.005  # seconds
+        self.pixelSize = 0.120  # microns
+        self.PSFwidth = (
+            0.160 / self.pixelSize
+        )  # Sigma of a Gaussian, ~2/3 airy disk diameter
         self.MSD_num_points = 4
 
         self.p_bleach_per_frame = 0.05
@@ -72,8 +80,8 @@ class Parameters:
         self.inner_mask_radius = 3
         self.gauss_mask_sigma = 2
         self.gauss_mask_max_iter = 100
-        
-        self.stoic_method = 'linear_fit'
+
+        self.stoic_method = "linear_fit"
         self.num_stoic_frames = 3
 
     def read(self, args):
@@ -84,16 +92,16 @@ class Parameters:
             key, value = arg.split("=", 2)
             try:
                 # use isinstance
-                if type(getattr(self,key)) is type(0):
+                if type(getattr(self, key)) is type(0):
                     setattr(self, key, int(value))
 
-                elif type(getattr(self,key)) is type(0.0):
+                elif type(getattr(self, key)) is type(0.0):
                     setattr(self, key, float(value))
 
-                elif type(getattr(self,key)) is type(True):
+                elif type(getattr(self, key)) is type(True):
                     setattr(self, key, value == "True")
 
-                elif type(getattr(self,key)) is type([]):
+                elif type(getattr(self, key)) is type([]):
                     setattr(self, key, list(map(lambda x: int(x), value.split(","))))
 
                 else:
@@ -103,4 +111,4 @@ class Parameters:
                 sys.exit(f"ERROR: No such parameter '{key}'")
 
             if key == "pixelSize":
-                self.PSFwidth = 0.160/self.pixelSize
+                self.PSFwidth = 0.160 / self.pixelSize
