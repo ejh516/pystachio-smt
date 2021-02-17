@@ -124,9 +124,11 @@ def get_stoichiometries(trajs, isingle, params):
                     traj.stoichiometry = traj.intensity[0] / isingle
         stoics.append(traj.stoichiometry)
     stoics = np.array(stoics)
-    plt.hist(np.round(stoics), bins=np.arange(0, 10, 0.5))
+    plt.hist(np.round(stoics)) #, bins=np.arange(0, 10, 0.5))
     plt.xticks(range(0, 11))
     plt.show()
     plt.scatter(range(len(stoics)), stoics)
+    plt.xlabel("Spot #")
+    plt.ylabel("Raw stoichiometry")
     plt.show()
     return 0
