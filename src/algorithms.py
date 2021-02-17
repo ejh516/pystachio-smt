@@ -30,6 +30,7 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
+from numba import jit
 
 def fwhm(data):
     """FWHM - Calculates the width of the highest peak in data
@@ -114,6 +115,7 @@ def get_distance_list(r_max):
     return distance_list
 
 
+@jit(nopython=True)
 def find_local_maxima(img):
     local_maxima = []
     for i in range(1, img.shape[0] - 1):
@@ -128,9 +130,20 @@ def find_local_maxima(img):
 
 
 def ultimate_erode(img, orig):
-    distance_list = get_distance_list(16)
-    img_dist = np.zeros(img.shape)
+    distance_list = np.array(get_distance_list(16))
 
+    img_dist = uer_jittable(img, distance_list)
+
+    spot_locations = find_local_maxima(img_dist)
+
+    if not spot_locations:
+        spot_locations = []
+
+    return spot_locations
+
+@jit(nopython=True)
+def uer_jittable(img, distance_list):
+    img_dist = np.zeros(img.shape)
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
             if img[i, j] != 0:
@@ -145,13 +158,11 @@ def ultimate_erode(img, orig):
                         break
                         continue
 
-                    if img[i + pixel[0], j + pixel[1]] == 0:
+                    if img[i + int(pixel[0]), j + int(pixel[1])] == 0:
                         img_dist[i, j] = pixel[2]
                         break
                 if img_dist[i, j] == 0:
                     print(f"WARNING: Unable to find any spots in this frame")
-                    return []
+                    return None
+    return img_dist
 
-    spot_locations = find_local_maxima(img_dist)
-
-    return spot_locations

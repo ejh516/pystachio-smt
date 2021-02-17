@@ -27,6 +27,7 @@ import sys
 
 class Parameters:
     def __init__(self):
+        self.num_procs = 1
         self.verbose = True  # Whether or not to display verbose console output
         self.c_split = "None"  # How the channels are split
         self.frames_to_track = (
