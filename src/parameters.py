@@ -27,7 +27,7 @@ import sys
 
 class Parameters:
     def __init__(self):
-        self.num_procs = 1
+        self.num_procs = 0
         self.verbose = True  # Whether or not to display verbose console output
         self.c_split = "None"  # How the channels are split
         self.frames_to_track = (
@@ -61,6 +61,7 @@ class Parameters:
         self.BGmean = 500.0  # mean background pixel intensity
         self.BGstd = 120.0  # standard deviation of background pixels
         self.num_frames = 100
+        self.split_frame = False
         self.frame_size = [64, 64]
 
         self.bleach_time = 0 # in frames, if 0 then no bleaching
@@ -80,7 +81,7 @@ class Parameters:
         self.subarray_halfwidth = 5
         self.inner_mask_radius = 3
         self.gauss_mask_sigma = 2
-        self.gauss_mask_max_iter = 10000
+        self.gauss_mask_max_iter = 1000
 
         self.stoic_method = "linear_fit"
         self.num_stoic_frames = 3

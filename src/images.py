@@ -53,7 +53,7 @@ class ImageData:
         self.frame_size = frame_size
         self.num_pixels = frame_size[0] * frame_size[1]
 
-        self.pixel_data = np.zeros([num_frames, frame_size[0], frame_size[1]])
+        self.pixel_data = np.zeros([num_frames, frame_size[1], frame_size[0]])
 
         self.exists = True
 
@@ -65,23 +65,32 @@ class ImageData:
             img = self.pixel_data.astype(np.uint16)
         return img
 
-    def read(self, seed_name):
+    def read(self, params):
         # Determine the filename from the seedname
-        if os.path.isfile(seed_name):
-            filename = seed_name
-        elif os.path.isfile(seed_name + ".tif"):
-            filename = seed_name + ".tif"
+        if os.path.isfile(params.seed_name):
+            filename = params.seed_name
+        elif os.path.isfile(params.seed_name + ".tif"):
+            filename = params.seed_name + ".tif"
         else:
             sys.abort(f"Unable to find file matching '{seed_name}'")
 
         # Read in the file and get the data size
         pixel_data = tifffile.imread(filename)
-        self.num_frames = pixel_data.shape[0]
-        self.frame_size = (pixel_data.shape[1], pixel_data.shape[2])
-        self.num_pixels = pixel_data.shape[1] * pixel_data.shape[2]
+
+        if params.num_frames:
+            self.num_frames = min(params.num_frames, pixel_data.shape[0])
+        else:
+            self.num_frames = pixel_data.shape[0]
+
+        if params.split_frame:
+            self.frame_size = (pixel_data.shape[2]//2, pixel_data.shape[1])
+        else:
+            self.frame_size = (pixel_data.shape[2], pixel_data.shape[1])
+
+        self.num_pixels = self.frame_size[0] * self.frame_size[1]
 
         # Store the frames in a list
-        self.pixel_data = pixel_data
+        self.pixel_data = pixel_data[:self.num_frames, :self.frame_size[1], :self.frame_size[0]]
 
         self.determine_first_frame()
 

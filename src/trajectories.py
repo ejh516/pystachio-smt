@@ -81,7 +81,8 @@ def build_trajectories(all_spots, params):
                 trajectories.append(Trajectory(traj_num, all_spots[frame], spot))
                 traj_num += 1
 
-            if len(close_candidates) == 1:
+            elif len(close_candidates) == 1:
+
                 close_candidates[0].extend(all_spots[frame], spot)
 
             else:
@@ -99,8 +100,11 @@ def build_trajectories(all_spots, params):
     return filtered_trajectories
 
 
-def write_trajectories(trajectories, params):
-    f = open(params.seed_name + "_trajectories.tsv", "w")
+def write_trajectories(trajectories, params, simulated=False):
+    if simulated:
+        f = open(params.seed_name + "_simulated_trajectories.tsv", "w")
+    else:
+        f = open(params.seed_name + "_trajectories.tsv", "w")
     f.write(f"trajectory\tframe\tx\ty\tintensity\tSNR\n")
     for traj in trajectories:
         for frame in range(traj.start_frame, traj.end_frame + 1):

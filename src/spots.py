@@ -230,9 +230,9 @@ class Spots:
             # Get the centre estimate, make sure the spot_region fits in the frame
             p_estimate = self.positions[i_spot, :]
             for d in (0, 1):
-                if p_estimate[d] - r < 0:
+                if round(p_estimate[d]) < r:
                     p_estimate[d] = r
-                elif p_estimate[d] + r + 1 >= frame.frame_size[d]:
+                elif round(p_estimate[d]) > frame.frame_size[d]-r-1:
                     p_estimate[d] = frame.frame_size[d] - r - 1
 
             # Create the sub-image
@@ -244,8 +244,8 @@ class Spots:
             ).astype(int)
 
             spot_pixels = image[
-                spot_region[0, 0] : spot_region[0, 1] + 1,
                 spot_region[1, 0] : spot_region[1, 1] + 1,
+                spot_region[0, 0] : spot_region[0, 1] + 1,
             ]
 
             coords = np.mgrid[

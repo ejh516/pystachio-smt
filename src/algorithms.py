@@ -124,7 +124,7 @@ def find_local_maxima(img):
                 img[i, j] != 0
                 and np.max(img[i - 1 : i + 2, j - 1 : j + 2]) == img[i, j]
             ):
-                local_maxima.append([i, j])
+                local_maxima.append([j, i])
 
     return local_maxima
 

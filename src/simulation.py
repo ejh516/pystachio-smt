@@ -30,6 +30,7 @@ import numpy.random as random
 
 from images import ImageData
 from spots import Spots
+from trajectories import build_trajectories,write_trajectories
 
 
 def simulate(params):
@@ -41,7 +42,7 @@ def simulate(params):
     real_spots[0].positions[:, 0] = random.rand(params.num_spots) * params.frame_size[0]
     real_spots[0].positions[:, 1] = random.rand(params.num_spots) * params.frame_size[1]
     real_spots[0].spot_intensity[:] = params.Isingle
-    real_spots[0].frame = 1
+    real_spots[0].frame = 0
 
     # Simulate diffusion
     S = np.sqrt(2 * params.diffusionCoeff * params.frameTime) / params.pixelSize
@@ -75,9 +76,9 @@ def simulate(params):
     image = ImageData()
     image.initialise(params.num_frames, params.frame_size)
 
-    x_pos, y_pos = np.meshgrid(range(params.frame_size[1]), range(params.frame_size[0]))
+    x_pos, y_pos = np.meshgrid(range(params.frame_size[0]), range(params.frame_size[1]))
     for frame in range(params.num_frames):
-        frame_data = np.zeros(image.frame_size).astype(np.uint16)
+        frame_data = np.zeros([params.frame_size[1], params.frame_size[0]]).astype(np.uint16)
 
         for spot in range(params.num_spots):
             frame_data += (
@@ -92,11 +93,13 @@ def simulate(params):
             ).astype(np.uint16)
 
         frame_data = random.poisson(frame_data)
-        bg_noise = random.normal(params.BGmean, params.BGstd, params.frame_size)
+        bg_noise = random.normal(params.BGmean, params.BGstd, [params.frame_size[1], params.frame_size[0]])
         frame_data += np.where(bg_noise > 0, bg_noise.astype(np.uint16), 0)
         image[frame] = frame_data
 
-    return image
+    real_trajs = build_trajectories(real_spots, params)
+
+    return image, real_trajs
 
 
 #

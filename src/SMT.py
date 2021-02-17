@@ -30,6 +30,7 @@ import postprocessing
 import simulation
 import state
 import tracking
+import trajectories
 
 
 
@@ -43,14 +44,15 @@ def main():
         if task == "track":
 
             st.image_data = images.ImageData()
-            st.image_data.read(params.seed_name)
+            st.image_data.read(params)
 
             st.spots, st.trajectories = tracking.track(st.image_data, st.parameters)
 
         elif task == "simulate":
-            st.image_data = simulation.simulate(st.parameters)
+            st.image_data, st.true_trajectories = simulation.simulate(st.parameters)
 #EJH#             spot_data.write(params)
             st.image_data.write(st.parameters)
+            trajectories.write_trajectories(st.true_trajectories, params,simulated=True)
 
         elif task=="simulate_stepwise":
             st.image_data = simulation.simulate_stepwise_bleaching(st.parameters)
