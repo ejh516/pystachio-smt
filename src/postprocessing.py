@@ -39,18 +39,22 @@ def get_isingle(intensities):
     kde = gaussian_kde(intensities, bw_method=bandwidth)
     x = np.linspace(0, np.amax(intensities), 10000)
     pdf = kde.evaluate(x)
+    peak = x[np.where(pdf == np.amax(pdf))]
     fig, ax1 = plt.subplots()
+    plt.xlabel("Intensity (a.u.)")
+    plt.ylabel("N")
     ax1.hist(
         intensities,
         bins=np.arange(0, np.amax(intensities) + 100, 100),
-        label="Raw data",
+        label="Raw data", color="gray"
     )
     ax2 = ax1.twinx()
     ax2.plot(x, pdf, "k-", label="Gaussian KDF")
+    plt.ylabel("Probability")
     ax2.ticklabel_format(axis="y", style="sci", scilimits=(0, 2))
-    plt.legend()
+    ax1.plot([peak,peak],[0,8], 'r--', label="Isingle", lw=2)
+    plt.legend()    
     plt.show()
-    peak = x[np.where(pdf == np.amax(pdf))]
     return peak
 
 
@@ -83,6 +87,8 @@ def get_diffusion_coef(traj_list, params):
             np.amax(track_lengths[: params.MSD_num_points])
         )
         plt.plot(tau, MSD)
+        plt.xlabel(r"$\tau$")
+        plt.ylabel("MSD ($\mu$m$^2$)")
         try:
             popt, pcov = curve_fit(straightline, tau, MSD, p0=[1, 0], sigma=weights)
             if popt[0] > 0:
@@ -93,13 +99,18 @@ def get_diffusion_coef(traj_list, params):
             print("oh no")
     plt.show()
     plt.hist(diffusion_coefs)
+    plt.xlabel("Diffusion coefficient ($\mu$m$^{2}$s$^{-1}$)")
+    plt.ylabel("N")
     plt.show()
     return diffusion_coefs, loc_precisions
 
 
 def plot_traj_intensities(trajs):
     for traj in trajs:
-        plt.plot(traj.intensity)
+        t = traj.intensity[1:]
+        plt.plot(t)
+    plt.xlabel("Frame number")
+    plt.ylabel("Intensity (a.u.)")
     plt.show()
 
 
@@ -121,7 +132,7 @@ def get_stoichiometries(trajs, isingle, params):
                     np.mean(traj.intensity[: params.num_stoic_frames]) / isingle
                 )
             elif params.stoic_method == "linear_fit":
-                if traj.length < params.num_stoic_frames:
+                if traj.length <= params.num_stoic_frames:
                     xdata = (
                         np.arange(1, traj.length + 1, dtype="float") * params.frameTime
                     )
@@ -132,7 +143,7 @@ def get_stoichiometries(trajs, isingle, params):
                         np.arange(1, params.num_stoic_frames + 1, dtype="float")
                         * params.frameTime
                     )
-                    ydata = traj.intensity[: params.num_stoic_frames]
+                    ydata = traj.intensity[1: params.num_stoic_frames+1]
                     popt, pcov = curve_fit(straightline, xdata, ydata)
                 intercept = popt[1]
                 if intercept > 0:
@@ -141,9 +152,13 @@ def get_stoichiometries(trajs, isingle, params):
                     traj.stoichiometry = traj.intensity[0] / isingle
         stoics.append(traj.stoichiometry)
     stoics = np.array(stoics)
-    plt.hist(np.round(stoics), bins=np.arange(0, 10, 0.5))
+    plt.hist(np.round(stoics)) #, bins=np.arange(0, 10, 0.5))
     plt.xticks(range(0, 11))
+    plt.xlabel("Rounded stoichiometry")
+    plt.ylabel("N")
     plt.show()
     plt.scatter(range(len(stoics)), stoics)
+    plt.xlabel("Spot #")
+    plt.ylabel("Raw stoichiometry")
     plt.show()
     return 0
