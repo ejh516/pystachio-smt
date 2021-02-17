@@ -78,7 +78,7 @@ class Parameters:
         self.subarray_halfwidth = 5
         self.inner_mask_radius = 3
         self.gauss_mask_sigma = 2
-        self.gauss_mask_max_iter = 100
+        self.gauss_mask_max_iter = 10000
 
         self.stoic_method = "linear_fit"
         self.num_stoic_frames = 3
