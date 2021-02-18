@@ -34,7 +34,7 @@ class State:
         self.true_trajectories = None
 
     def render(self):
-        maxval = self.image_data.max_intensity()
+        maxval = 1000 #self.image_data.max_intensity()
         figure = plt.figure()
         plt_frames = []
 
@@ -55,7 +55,7 @@ class State:
                 y = np.array(y)
                 x_scaled = (x+0.5) * px_size
                 y_scaled = (fr_size[1]-y-0.5) * px_size
-                plt.plot(x_scaled,y_scaled,"o-",c="tab:red")
+                plt.plot(x_scaled,y_scaled,"o-",c=colors[traj.id % len(colors)])
 
         if self.true_trajectories:
             for traj in self.true_trajectories:
@@ -72,13 +72,19 @@ class State:
                 plt.plot(x_scaled,y_scaled,"+--",c="tab:orange")
 
 
-#EJH#         for frame in range(self.image_data.num_frames):
-        plt_frame = plt.imshow(
-                self.image_data.pixel_data[-1,:,:],
-                vmin=0,
-                vmax=maxval, 
-                extent=[0, fr_size[0]*px_size, 0, fr_size[1]*px_size]
-        )
+        plts = []
+        for frame in range(self.image_data.num_frames):
+            plt_frame = plt.imshow(
+                    self.image_data.pixel_data[frame,:,:],
+                    vmin=0,
+                    animated=True,
+                    vmax=maxval, 
+                    cmap=plt.get_cmap("gray"),
+                    extent=[0, fr_size[0]*px_size, 0, fr_size[1]*px_size]
+            )
+            plts.append([plt_frame]) 
+
+        ani = animation.ArtistAnimation(figure, plts, interval=50,)
 
         plt.title(f"Simulated spot data, frame {self.image_data.num_frames}")
         plt.xlabel("μm")

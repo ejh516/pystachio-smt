@@ -163,6 +163,6 @@ def uer_jittable(img, distance_list):
                         break
                 if img_dist[i, j] == 0:
                     print(f"WARNING: Unable to find any spots in this frame")
-                    return None
+                    return np.zeros(img.shape)
     return img_dist
 

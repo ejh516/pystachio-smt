@@ -46,6 +46,7 @@ class Parameters:
         self.task = ""
         self.verbose = True
         self.render_image = False
+        self.use_mask = False
         self.seed_name = ""
 
         # Spots.find_in_frame
@@ -64,6 +65,7 @@ class Parameters:
         self.split_frame = False
         self.frame_size = [64, 64]
 
+        self.min_traj_len = 3
         self.bleach_time = 0 # in frames, if 0 then no bleaching
         self.diffusionCoeff = 1.0 # um2/s
 

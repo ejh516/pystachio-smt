@@ -77,6 +77,17 @@ class ImageData:
         # Read in the file and get the data size
         pixel_data = tifffile.imread(filename)
 
+        if params.use_mask:
+            mask_file = params.seed_name + "_mask.tif"
+            if os.path.isfile(mask_file):
+                print(f"Using mask {mask_file}")
+                filename = params.seed_name
+                pixel_mask = tifffile.imread(mask_file)
+                pixel_mask = np.where(pixel_mask > 0, 1, 0)
+                pixel_data = pixel_data * pixel_mask
+                print(f"  Mask min: {np.max(pixel_mask)}")
+                print(f"  Mask max: {np.min(pixel_mask)}")
+
         if params.num_frames:
             self.num_frames = min(params.num_frames, pixel_data.shape[0])
         else:

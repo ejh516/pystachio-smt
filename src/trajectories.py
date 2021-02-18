@@ -89,14 +89,13 @@ def build_trajectories(all_spots, params):
                 trajectories.append(Trajectory(traj_num, all_spots[frame], spot))
                 traj_num += 1
 
-    filtered_trajectories = list(filter(lambda x: x.length > 1, trajectories))
+    filtered_trajectories = list(filter(lambda x: x.length >= params.min_traj_len, trajectories))
 
-    actual_traj_num = 1
+    actual_traj_num = 0
     for traj in filtered_trajectories:
         traj.id = actual_traj_num
         actual_traj_num += 1
 
-    filtered_trajectories = list(filter(lambda x: x.length > 1, trajectories))
     return filtered_trajectories
 
 

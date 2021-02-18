@@ -77,8 +77,9 @@ def main():
             postprocessing.get_stoichiometries(st.trajectories, calculated_isingle, st.parameters)
 
         elif task == "view":
-            if not st.image_data.exists:
-               sys.exit(f"ERROR: No file loaded to view")
+            if not st.image_data:
+                st.image_data = images.ImageData()
+                st.image_data.read(params)
 
             st.render()
 
