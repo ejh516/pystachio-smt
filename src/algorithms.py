@@ -124,7 +124,7 @@ def find_local_maxima(img):
                 img[i, j] != 0
                 and np.max(img[i - 1 : i + 2, j - 1 : j + 2]) == img[i, j]
             ):
-                local_maxima.append([i, j])
+                local_maxima.append([j, i])
 
     return local_maxima
 
@@ -163,6 +163,6 @@ def uer_jittable(img, distance_list):
                         break
                 if img_dist[i, j] == 0:
                     print(f"WARNING: Unable to find any spots in this frame")
-                    return None
+                    return np.zeros(img.shape)
     return img_dist
 
