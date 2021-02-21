@@ -34,12 +34,18 @@ import tifffile
 
 class ImageData:
     def __init__(self):
+        self.num_frames = -1
+        self.has_mask = False
+        self.pixel_data = None
+        self.mask_data = None
         self.exists = False
 
     def __getitem__(self, index):
         frame = ImageData()
         frame.initialise(1, self.frame_size)
         frame.pixel_data[0, :, :] = self.pixel_data[index, :, :]
+        frame.mask_data = self.mask_data
+        frame.has_mask = self.has_mask
         return frame
 
     def __setitem__(self, index, value):
@@ -54,6 +60,8 @@ class ImageData:
         self.num_pixels = frame_size[0] * frame_size[1]
 
         self.pixel_data = np.zeros([num_frames, frame_size[1], frame_size[0]])
+        self.mask_data = np.zeros([num_frames, frame_size[1], frame_size[0]])
+        self.has_mask = False
 
         self.exists = True
 
@@ -84,9 +92,10 @@ class ImageData:
                 filename = params.seed_name
                 pixel_mask = tifffile.imread(mask_file)
                 pixel_mask = np.where(pixel_mask > 0, 1, 0)
-                pixel_data = pixel_data * pixel_mask
-                print(f"  Mask min: {np.max(pixel_mask)}")
-                print(f"  Mask max: {np.min(pixel_mask)}")
+                self.has_mask = True
+                self.mask_data = pixel_mask
+        else:
+            self.use_mask = False
 
         if params.num_frames:
             self.num_frames = min(params.num_frames, pixel_data.shape[0])
