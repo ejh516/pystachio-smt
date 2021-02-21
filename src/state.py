@@ -34,7 +34,7 @@ class State:
         self.true_trajectories = None
 
     def render(self):
-        maxval = 1000 #self.image_data.max_intensity()
+        maxval = self.image_data.max_intensity()
         figure = plt.figure()
         plt_frames = []
 

@@ -21,7 +21,6 @@ Version: 0.2.0
 """
 
 import sys
-
 import numpy as np
 
 import images
@@ -82,6 +81,9 @@ def main():
                 st.image_data.read(params)
 
             st.render()
+
+        elif task == "compare":
+            trajectories.compare_trajectories(st.true_trajectories, st.trajectories, st.parameters)
 
         else:
             sys.exit(f"ERROR: Task {task} is not yet implemented. Aborting...")

@@ -65,7 +65,7 @@ def track_frame(frame_data, frame, params):
         # Iteratively refine the spot centres
         frame_spots.refine_centres(frame_data, params)
 
-        frame_spots.filter_candidates(params)
+        frame_spots.filter_candidates(frame_data, params)
 
         print(
             f"Frame {frame:4d}: found {frame_spots.num_spots:3d} spots "

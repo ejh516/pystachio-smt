@@ -44,6 +44,7 @@ class Spots:
             self.traj_num = [-1] * self.num_spots
             self.snr = np.zeros([num_spots])
             self.laser_on_frame = 0
+            self.converged = np.zeros([num_spots])
             self.exists = True
         else:
             self.frame = frame
@@ -59,6 +60,7 @@ class Spots:
         self.width = np.zeros([self.num_spots, 2])
         self.traj_num = [-1] * self.num_spots
         self.snr = np.zeros([self.num_spots])
+        self.converged = np.zeros([self.num_spots])
 
         for i in range(self.num_spots):
             self.positions[i, :] = positions[i]
@@ -136,7 +138,7 @@ class Spots:
 
         self.set_positions(new_positions)
 
-    def filter_candidates(self, params):
+    def filter_candidates(self, frame, params):
         positions = []
         clipping = []
         bg_intensity = []
@@ -147,15 +149,20 @@ class Spots:
         snr = []
 
         for i in range(self.num_spots):
-            if self.snr[i] > params.snr_filter_cutoff:
-                positions.append(self.positions[i, :])
-                clipping.append(self.clipping[i])
-                bg_intensity.append(self.bg_intensity[i])
-                spot_intensity.append(self.spot_intensity[i])
-                centre_intensity.append(self.centre_intensity[i])
-                width.append(self.width[i, :])
-                traj_num.append(self.traj_num[i])
-                snr.append(self.snr[i])
+            if self.snr[i] <= params.snr_filter_cutoff:
+                continue
+
+            if frame.has_mask and frame.mask_data[round(self.positions[i,1]), round(self.positions[i,0])] == 0:
+                continue
+
+            positions.append(self.positions[i, :])
+            clipping.append(self.clipping[i])
+            bg_intensity.append(self.bg_intensity[i])
+            spot_intensity.append(self.spot_intensity[i])
+            centre_intensity.append(self.centre_intensity[i])
+            width.append(self.width[i, :])
+            traj_num.append(self.traj_num[i])
+            snr.append(self.snr[i])
 
         self.num_spots = len(clipping)
         self.positions = np.array(positions)
@@ -166,6 +173,8 @@ class Spots:
         self.width = np.array(width)
         self.traj_num = np.array(traj_num)
         self.snr = np.array(snr)
+
+
 
     def distance_from(self, other):
         distances = np.zeros([self.num_spots, other.num_spots])
@@ -328,6 +337,7 @@ class Spots:
             self.bg_intensity[i_spot] = bg_average
             self.spot_intensity[i_spot] = spot_intensity
             self.snr[i_spot] = snr
+            self.converged[i_spot] = converged
 
             if converged:
                 self.positions[i_spot, :] = p_estimate
