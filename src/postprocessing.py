@@ -120,7 +120,7 @@ def get_stoichiometries(trajs, isingle, params):
     for traj in trajs:
         if traj.length == 1:
             continue
-        if traj.start_frame != 0:
+        if False: #traj.start_frame != 0:
             traj.stoichiometry = traj.intensity[0] / isingle
         else:
             if params.stoic_method == "initial":
@@ -134,9 +134,9 @@ def get_stoichiometries(trajs, isingle, params):
             elif params.stoic_method == "linear_fit":
                 if traj.length <= params.num_stoic_frames:
                     xdata = (
-                        np.arange(1, traj.length + 1, dtype="float") * params.frameTime
+                        np.arange(1, traj.length, dtype="float") * params.frameTime
                     )
-                    ydata = traj.intensity[: traj.length]
+                    ydata = traj.intensity[1: traj.length]
                     popt, pcov = curve_fit(straightline, xdata, ydata)
                 else:
                     xdata = (

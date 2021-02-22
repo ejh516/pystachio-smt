@@ -70,7 +70,8 @@ def main():
             calculated_isingle = postprocessing.get_isingle(intensities)
             dc, lp = postprocessing.get_diffusion_coef(st.trajectories, st.parameters)
 
-            print(np.mean(dc))
+            print(f"Diffusion coefficient: {np.mean(dc)}")
+            print(f"Isingle: {calculated_isingle}")
 
             postprocessing.plot_traj_intensities(st.trajectories)
             postprocessing.get_stoichiometries(st.trajectories, calculated_isingle, st.parameters)

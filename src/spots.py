@@ -214,16 +214,22 @@ class Spots:
             if self.traj_num[i] == -1:
                 sys.exit(f"Unable to find a match for spot {i}, frame {self.frame}")
 
-    def get_spot_intensities(self, frame):
+    def get_spot_intensities(self, frame, params):
         for i in range(self.num_spots):
-            x = int(self.positions[i, 0])
-            y = int(self.positions[i, 1])
+            x = round(self.positions[i, 0])
+            y = round(self.positions[i, 1])
             # Create a tmp array with the centre of the spot in the centre
             tmp = frame[
-                x - 8 : x + 9, y - 8 : y + 9
-            ]  # ED: is this right? or should be other way round?
+                y - params.subarray_halfwidth : y + params.subarray_halfwidth+1, 
+                x - params.subarray_halfwidth : x + params.subarray_halfwidth + 1
+            ] 
             spotmask = np.zeros(tmp.shape)
-            cv2.circle(spotmask, (8, 8), 5, 1, -1)
+            cv2.circle(spotmask, 
+                    (params.subarray_halfwidth, params.subarray_halfwidth),
+                    params.inner_mask_radius,
+                    1,
+                    -1
+            )
             bgintensity = np.mean(tmp[spotmask == 0])
             tmp = tmp - bgintensity
             intensity = np.sum(tmp[spotmask == 1])
@@ -323,14 +329,16 @@ class Spots:
                 p_estimate = p_estimate_new
 
                 spot_intensity = np.sum(bg_corr_spot_pixels * inner_mask)
-                bg_std = np.sqrt(np.sum(spot_bg ** 2) / num_bg_spots - bg_average ** 2)
+                bg_std = np.std(spot_bg[bg_mask==1])
+
 
                 if estimate_change < 1e-6:
                     converged = True
 
                 # Calculate signal-noise ratio
                 # Don't bother reiterating this spot if it's too low
-                snr = abs(spot_intensity / (bg_std))
+                snr = abs(spot_intensity / (bg_std*np.sum(inner_mask)))
+#EJH#                 snr = abs(spot_intensity / (bg_std*np.sum(inner_mask)))
                 if snr <= params.snr_filter_cutoff:
                     break
 
@@ -339,5 +347,4 @@ class Spots:
             self.snr[i_spot] = snr
             self.converged[i_spot] = converged
 
-            if converged:
-                self.positions[i_spot, :] = p_estimate
+            self.positions[i_spot, :] = p_estimate

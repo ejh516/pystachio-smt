@@ -53,7 +53,7 @@ class Parameters:
         self.filter_image = "gaussian"
         self.disk_radius = 5
         self.bw_threshold_tolerance = 1.0
-        self.snr_filter_cutoff = 40
+        self.snr_filter_cutoff = 25.0
 
         self.max_displacement = 5.0
         # Initialise
@@ -80,9 +80,9 @@ class Parameters:
 
         self.p_bleach_per_frame = 0.05
 
-        self.subarray_halfwidth = 5
-        self.inner_mask_radius = 3
-        self.gauss_mask_sigma = 2
+        self.subarray_halfwidth = 8
+        self.inner_mask_radius = 5
+        self.gauss_mask_sigma = 2.
         self.gauss_mask_max_iter = 1000
 
         self.stoic_method = "linear_fit"
