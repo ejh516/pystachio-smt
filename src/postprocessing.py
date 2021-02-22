@@ -17,13 +17,12 @@ def straightline(x, m, c):
 
 
 def plot_snr(snr):
-    snr = snr[snr > 1]
     bandwidth=0.07
     kde = gaussian_kde(snr, bw_method=bandwidth)
     x = np.linspace(0, np.amax(snr), 10000)
     pdf = kde.evaluate(x)
     fig, ax1 = plt.subplots()
-    ax1.hist(snr, bins=np.arange(0,np.amax(snr)+2,2), label="Raw data")
+    ax1.hist(snr, bins=np.arange(0,np.amax(snr)+2,0.05), label="Raw data")
     ax2 = ax1.twinx()
     ax2.plot(x, pdf, 'k-', label="Gaussian KDF")
     ax2.ticklabel_format(axis='y', style='sci', scilimits=(0,2))
