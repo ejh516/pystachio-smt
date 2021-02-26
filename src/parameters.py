@@ -53,7 +53,7 @@ class Parameters:
         self.filter_image = "gaussian"
         self.disk_radius = 5
         self.bw_threshold_tolerance = 1.0
-        self.snr_filter_cutoff = 25.0
+        self.snr_filter_cutoff = 0.4
 
         self.max_displacement = 5.0
         # Initialise

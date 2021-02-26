@@ -28,12 +28,16 @@ import multiprocessing as mp
 
 import spots
 import trajectories
+import images
 
 
-def track(image_data, params):
+def track(params):
+    # Read in the image data
+    image_data = images.ImageData()
+    image_data.read(params)
+
     # For each frame, detect spots
     all_spots = []
-
     if params.num_procs == 0:
         for frame in range(image_data.num_frames):
             all_spots.append(track_frame(image_data[frame], frame, params))
@@ -49,10 +53,6 @@ def track(image_data, params):
     # Link the spot trajectories across the frames
     trajs = trajectories.build_trajectories(all_spots, params)
     trajectories.write_trajectories(trajs, params)
-
-    # EJH#     image_data.render(trajectories=traj)
-
-    return (all_spots, trajs)
 
 def track_frame(frame_data, frame, params):
         # Find the spots in this frame

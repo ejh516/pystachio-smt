@@ -35,16 +35,13 @@ class Spots:
         self.num_spots = num_spots
         if num_spots > 0:
             self.positions = np.zeros([num_spots, 2])
-            self.clipping = [False] * num_spots
             self.bg_intensity = np.zeros(num_spots)
             self.spot_intensity = np.zeros(num_spots)
-            self.centre_intensity = np.zeros(num_spots)
-            self.width = np.zeros([num_spots, 2])
             self.frame = frame
             self.traj_num = [-1] * self.num_spots
             self.snr = np.zeros([num_spots])
             self.laser_on_frame = 0
-            self.converged = np.zeros([num_spots])
+            self.converged = np.zeros([num_spots], dtype=np.int8)
             self.exists = True
         else:
             self.frame = frame
@@ -60,7 +57,7 @@ class Spots:
         self.width = np.zeros([self.num_spots, 2])
         self.traj_num = [-1] * self.num_spots
         self.snr = np.zeros([self.num_spots])
-        self.converged = np.zeros([self.num_spots])
+        self.converged = np.zeros([self.num_spots],dtype=np.int8)
 
         for i in range(self.num_spots):
             self.positions[i, :] = positions[i]
@@ -111,7 +108,8 @@ class Spots:
         )
 
         spot_locations = ultimate_erode(bw_filled[:, :, 0], frame)
-
+        if np.isnan(spot_locations).any():
+            raise "Found nans"
         self.set_positions(spot_locations)
 
     def merge_coincident_candidates(self):
@@ -149,10 +147,18 @@ class Spots:
         snr = []
 
         for i in range(self.num_spots):
+            # Fliter spots that are too noisy to be useful candidates
             if self.snr[i] <= params.snr_filter_cutoff:
                 continue
-
+            # Fitler spots that are outside of any existing mask
             if frame.has_mask and frame.mask_data[round(self.positions[i,1]), round(self.positions[i,0])] == 0:
+                continue
+            
+            # Filter spots too close to the edge to give good numbers
+            if self.positions[i,0] < params.subarray_halfwidth \
+              or self.positions[i,0] >= frame.frame_size[1] - params.subarray_halfwidth \
+              or self.positions[i,1] < params.subarray_halfwidth \
+              or self.positions[i,1] >= frame.frame_size[0] - params.subarray_halfwidth:
                 continue
 
             positions.append(self.positions[i, :])
@@ -233,6 +239,8 @@ class Spots:
             bgintensity = np.mean(tmp[spotmask == 0])
             tmp = tmp - bgintensity
             intensity = np.sum(tmp[spotmask == 1])
+            if intensity == 0:
+                print(f"WARNING: Zero intensity found at {[x, y]}")
             self.spot_intensity[i] = intensity
 
     def refine_centres(self, frame, params):
@@ -326,7 +334,11 @@ class Spots:
                 )
                 estimate_change = np.linalg.norm(p_estimate - p_estimate_new)
 
-                p_estimate = p_estimate_new
+                if not np.isnan(p_estimate_new).any():
+                    p_estimate = p_estimate_new
+                else:
+                    print("WARNING: Position estimate is NaN, falied to converge")
+                    break
 
                 spot_intensity = np.sum(bg_corr_spot_pixels * inner_mask)
                 bg_std = np.std(spot_bg[bg_mask==1])

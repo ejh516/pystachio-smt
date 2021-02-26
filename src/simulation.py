@@ -30,7 +30,7 @@ import numpy.random as random
 
 from images import ImageData
 from spots import Spots
-from trajectories import build_trajectories,write_trajectories
+import trajectories
 
 
 def simulate(params):
@@ -41,7 +41,6 @@ def simulate(params):
     # initialise the spot co-ords
     real_spots[0].positions[:, 0] = random.rand(params.num_spots) * params.frame_size[0]
     real_spots[0].positions[:, 1] = random.rand(params.num_spots) * params.frame_size[1]
-    real_spots[0].spot_intensity[:] = params.Isingle
     real_spots[0].frame = 0
 
     # Simulate diffusion
@@ -51,7 +50,6 @@ def simulate(params):
 
     for frame in range(1, params.num_frames):
         real_spots[frame].frame = frame
-        real_spots[frame].spot_intensity[:] = params.Isingle
         real_spots[frame].traj_num = real_spots[frame - 1].traj_num[:]
         real_spots[frame].positions = random.normal(
             real_spots[frame - 1].positions, S, (params.num_spots, 2)
@@ -81,8 +79,8 @@ def simulate(params):
         frame_data = np.zeros([params.frame_size[1], params.frame_size[0]]).astype(np.uint16)
 
         for spot in range(params.num_spots):
-            frame_data += (
-                (real_spots[frame].spot_intensity[spot] / (2 * np.pi * params.PSFwidth))
+            spot_data = (
+                (params.Isingle / (2 * np.pi * params.PSFwidth**2))
                 * np.exp(
                     -(
                         (x_pos - real_spots[frame].positions[spot, 0]) ** 2
@@ -91,14 +89,18 @@ def simulate(params):
                     / (2 * params.PSFwidth ** 2)
                 )
             ).astype(np.uint16)
+            frame_data += spot_data
+            real_spots[frame].spot_intensity[spot]=np.sum(spot_data)
 
         frame_data = random.poisson(frame_data)
         bg_noise = random.normal(params.BGmean, params.BGstd, [params.frame_size[1], params.frame_size[0]])
         frame_data += np.where(bg_noise > 0, bg_noise.astype(np.uint16), 0)
         image[frame] = frame_data
 
-    real_trajs = build_trajectories(real_spots, params)
+    real_trajs = trajectories.build_trajectories(real_spots, params)
 
+    image.write(params)
+    trajectories.write_trajectories(real_trajs, params,simulated=True)
     return image, real_trajs
 
 
