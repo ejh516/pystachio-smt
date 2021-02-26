@@ -27,6 +27,7 @@ Version: 0.2.0
 
 import csv
 import sys
+import os
 
 import numpy as np
 from spots import Spots
@@ -118,28 +119,96 @@ def write_trajectories(trajectories, params, simulated=False):
     f.close()
 
 
+def to_spots(trajs):
+    all_spots = []
+    frame = 0
+    done_all_frames = False
+    while not done_all_frames:
+        done_all_frames = True
+
+        # Get the spots from trajs for this frame
+        frame_spots = []
+        for traj in trajs:
+
+            if traj.end_frame > frame:
+                done_all_frames = False
+
+            if traj.start_frame > frame or traj.end_frame < frame:
+                continue
+            frame_spots.append(traj.path[frame-traj.start_frame][:])
+
+        spots = Spots(len(frame_spots), frame)
+        spots.set_positions(np.array(frame_spots))
+        all_spots.append(spots)
+
+        # Get the spots from trajs for this frame
+        positions = []
+        bg_intensity = []
+        spot_intensity = []
+        snr = []
+        converged = []
+        for traj in trajs:
+
+            if traj.end_frame > frame:
+                done_all_frames = False
+
+            if traj.start_frame > frame or traj.end_frame < frame:
+                continue
+
+            i = frame-traj.start_frame
+            positions.append(traj.path[i][:])
+            spot_intensity.append(traj.intensity[i])
+            bg_intensity.append(traj.bg_intensity[i])
+            snr.append(traj.snr[i])
+            converged.append(traj.converged[i])
+
+
+        spots = Spots(len(positions), frame)
+        spots.set_positions(np.array(positions))
+        spots.spot_intensity = np.array(spot_intensity)
+        spots.bg_intensity = np.array(bg_intensity)
+        spots.snr = np.array(snr)
+        spots.converged = np.array(bg_intensity, dtype=np.int8)
+        all_spots.append(spots)
+
+        frame += 1
+
+    return all_spots
+
 def read_trajectories(filename):
     trajectories = []
     prev_traj_id = -1
+    if not os.path.isfile(filename):
+        print(f"WARNING: No such file {filename}")
+        return None
     with open(filename) as tsv_file:
-        tsv_reader = csv.reader(tsv_file)
+        tsv_reader = csv.reader(tsv_file,delimiter="\t")
         for line in tsv_reader:
+            if line[0] == "trajectory":
+                continue
             spot = Spots(num_spots=1)
-            traj_id = line[0] = traj_id
-            spot.frame = line[1]
-            spot.position[0, :] = line[2:3]
-            spot.intensity[0] = line[4]
-            spot.bg_intensity[0] = line[5]
-            spot.snr[0] = line[6]
+            traj_id = int(line[0])
+            spot.frame = int(line[1])
+            spot.positions[0, :] = [float(line[2]), float(line[3])]
+            spot.spot_intensity[0] = float(line[4])
+            spot.bg_intensity[0] = float(line[5])
+            spot.snr[0] = float(line[6])
+            spot.converged[0] = int(line[7])
 
             if traj_id != prev_traj_id:
                 trajectories.append(Trajectory(traj_id, spot, 0))
             else:
                 trajectories[-1].extend(spot, 0)
+            prev_traj_id = traj_id
 
-def compare_trajectories(target_trajs, trajs, params):
+    return trajectories
+
+def compare_trajectories(params):
     all_target_spots = []
     all_spots = []
+
+    trajs = read_trajectories(params.seed_name + "_trajectories.tsv")
+    target_trajs = read_trajectories(params.seed_name + "_simulated_trajectories.tsv")
 
     frame = 0
     done_all_frames = False
@@ -204,25 +273,25 @@ def compare_trajectories(target_trajs, trajs, params):
                 candidate_dist = np.linalg.norm(
                     all_target_spots[frame].positions[spot,:] - all_spots[frame].positions[candidate,:]
                 )
-                if candidate_dist < params.max_displacement:
-                    matches += 1
+                if candidate_dist < 1:
                     close_candidates.append(candidate_dist)
 
             if len(close_candidates) == 0:
                 false_negatives += 1
 
             elif len(close_candidates) == 1:
+                matches += 1
                 errors.append(close_candidates[0])
 
             else:
                 false_negatives += 1
                 multiples += 1
 
-        false_positives = all_spots[frame].num_spots - outside_frame - matches
+        false_positives = all_spots[frame].num_spots - matches
         print(f"Frame {frame:4d}:",
               f"Error = {np.mean(np.array(errors)):8f} pixels, ",
-              f"Found = {all_spots[frame].num_spots:3d}, ",
-              f"Matches = {matches:3d}, ",
-              f"False negatives = {false_negatives:3d}, ",
-              f"False positives = {false_positives:3d}, ",
+              f"Found = {all_spots[frame].num_spots:3d} ",
+              f"Matches = {matches:3d} ",
+              f"False negatives = {false_negatives:3d} ",
+              f"False positives = {false_positives:3d} ",
               f"Outside = {outside_frame:3d} ")

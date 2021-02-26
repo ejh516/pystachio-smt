@@ -11,6 +11,40 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy.stats import gaussian_kde
 
+import trajectories
+
+def postprocess(params, simulated=False):
+    trajs = []
+    if simulated:
+        trajs = trajectories.read_trajectories(params.seed_name + "_simulated_trajectories.tsv")
+    else:
+        trajs = trajectories.read_trajectories(params.seed_name + "_trajectories.tsv")
+
+    spots = trajectories.to_spots(trajs)
+    print(f"Looking at {len(trajs)} trajectories across {len(spots)} frames")
+    intensities = np.array([])
+    snrs = np.array([])
+    for i in range(len(spots)):
+        tmp = spots[i].spot_intensity
+        tmp_snr = spots[i].snr
+        intensities = np.concatenate((intensities,tmp))
+        snrs = np.concatenate((snrs,tmp_snr))
+
+    calculated_snr = plot_snr(snrs)
+
+    calculated_isingle = get_isingle(intensities)
+    dc, lp = get_diffusion_coef(trajs, params)
+
+    if simulated:
+        print(f"Simulated diffusion coefficient: {np.mean(dc)}")
+        print(f"Simulated Isingle:               {calculated_isingle[0]}")
+    else:
+        print(f"Tracked diffusion coefficient: {np.mean(dc)}")
+        print(f"Tracked Isingle:               {calculated_isingle[0]}")
+
+    plot_traj_intensities(trajs)
+    get_stoichiometries(trajs, calculated_isingle, params)
+
 
 def straightline(x, m, c):
     return m * x + c
@@ -18,11 +52,11 @@ def straightline(x, m, c):
 
 def plot_snr(snr):
     bandwidth=0.07
-    kde = gaussian_kde(snr, bw_method=bandwidth)
+    kde = gaussian_kde(snr[snr != 0], bw_method=bandwidth)
     x = np.linspace(0, np.amax(snr), 10000)
     pdf = kde.evaluate(x)
     fig, ax1 = plt.subplots()
-    ax1.hist(snr, bins=np.arange(0,np.amax(snr)+2,0.05), label="Raw data")
+    ax1.hist(snr[snr != 0], bins=np.arange(0,np.amax(snr)+2,0.05), label="Raw data")
     ax2 = ax1.twinx()
     ax2.plot(x, pdf, 'k-', label="Gaussian KDF")
     ax2.ticklabel_format(axis='y', style='sci', scilimits=(0,2))

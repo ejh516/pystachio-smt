@@ -80,7 +80,7 @@ class ImageData:
         elif os.path.isfile(params.seed_name + ".tif"):
             filename = params.seed_name + ".tif"
         else:
-            sys.abort(f"Unable to find file matching '{seed_name}'")
+            sys.exit(f"Unable to find file matching '{params.seed_name}'")
 
         # Read in the file and get the data size
         pixel_data = tifffile.imread(filename)

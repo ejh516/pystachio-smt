@@ -27,64 +27,39 @@ import images
 import parameters
 import postprocessing
 import simulation
-import state
 import tracking
 import trajectories
-
-
+import visualisation
+import dash_ui.app as app
 
 def main():
     params = parameters.Parameters()
     params.read(sys.argv)
 
-    st = state.State(params)
-
     for task in params.task:
-        if task == "track":
+        if task == "app":
+            app.launch_app(params)
 
-            st.image_data = images.ImageData()
-            st.image_data.read(params)
-
-            st.spots, st.trajectories = tracking.track(st.image_data, st.parameters)
+        elif task == "track":
+            tracking.track(params)
 
         elif task == "simulate":
-            st.image_data, st.true_trajectories = simulation.simulate(st.parameters)
+            simulation.simulate(params)
 #EJH#             spot_data.write(params)
-            st.image_data.write(st.parameters)
-            trajectories.write_trajectories(st.true_trajectories, params,simulated=True)
 
         elif task=="simulate_stepwise":
-            st.image_data = simulation.simulate_stepwise_bleaching(st.parameters)
-            st.image_data.write(st.parameters)
+            image_data = simulation.simulate_stepwise_bleaching(params)
+            image_data.write(params)
+            trajectories.write_trajectories(true_trajectories, params,simulated=True)
 
         elif task == "postprocess":
-            intensities = np.array([])
-            snrs = np.array([])
-            for i in range(len(st.spots)):
-                tmp = st.spots[i].spot_intensity
-                intensities = np.concatenate((intensities,tmp))
-                snrs = np.concatenate((snrs,st.spots[i].snr))
-
-            calculated_snr = postprocessing.plot_snr(snrs)
-
-            calculated_isingle = postprocessing.get_isingle(intensities)
-            dc, lp = postprocessing.get_diffusion_coef(st.trajectories, st.parameters)
-
-            print(f"Diffusion coefficient: {np.mean(dc)}")
-            print(f"Isingle: {calculated_isingle}")
-
-            postprocessing.plot_traj_intensities(st.trajectories)
-            postprocessing.get_stoichiometries(st.trajectories, calculated_isingle, st.parameters)
+            postprocessing.postprocess(params)
 
         elif task == "view":
-            if not st.image_data:
-                st.image_data = images.ImageData()
-                st.image_data.read(params)
-
-            st.render()
+            visualisation.render(params)
 
         elif task == "compare":
-            trajectories.compare_trajectories(st.true_trajectories, st.trajectories, st.parameters)
+            trajectories.compare_trajectories(params)
 
         else:
             sys.exit(f"ERROR: Task {task} is not yet implemented. Aborting...")
