@@ -127,21 +127,6 @@ def to_spots(trajs):
         done_all_frames = True
 
         # Get the spots from trajs for this frame
-        frame_spots = []
-        for traj in trajs:
-
-            if traj.end_frame > frame:
-                done_all_frames = False
-
-            if traj.start_frame > frame or traj.end_frame < frame:
-                continue
-            frame_spots.append(traj.path[frame-traj.start_frame][:])
-
-        spots = Spots(len(frame_spots), frame)
-        spots.set_positions(np.array(frame_spots))
-        all_spots.append(spots)
-
-        # Get the spots from trajs for this frame
         positions = []
         bg_intensity = []
         spot_intensity = []
