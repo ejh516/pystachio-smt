@@ -21,6 +21,7 @@ Version: 0.2.0
 """
 
 import sys
+import os
 import numpy as np
 
 import images
@@ -33,10 +34,19 @@ import visualisation
 import dash_ui.app as app
 
 def main():
-    params = parameters.Parameters()
-    params.read(sys.argv)
+    tasks = sys.argv[1]
+    name = sys.argv[2]
 
-    for task in params.task:
+    params = parameters.Parameters()
+    if os.path.exists(name + ".json"):
+        params.read(name + ".json")
+
+    params._options['general']['tasks']['value'] = tasks.split(",")
+    params._options['general']['name']['value'] = name
+    params.write(name + "_out.json")
+
+    tasks = params.get('general', 'tasks')
+    for task in tasks:
         if task == "app":
             app.launch_app(params)
 

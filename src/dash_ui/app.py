@@ -24,10 +24,11 @@ import images
 from parameters import Parameters
 from trajectories import read_trajectories
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LITERA])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.MINTY])
 
 def launch_app(params):
-    app.title = "SMT-Python"
+    app.title = "PyNACHE"
+    params.write(params.get('general', 'name') + '.json')
     app.layout = dash_ui.layout.build_layout(params)
     app.run_server(debug=False)
 
@@ -39,10 +40,9 @@ def launch_app(params):
         Input('render-image-name','children'))
 def update_slider(render_selection, vis_frame, seedname):
     params = Parameters()
-    params.seed_name = seedname
-    print(f"Opening {params.seed_name}")
+    params.read(seedname + ".json")
     image_data = images.ImageData()
-    image_data.read(params)
+    image_data.read(seedname + ".tif", params)
     fig = px.imshow(
         image_data.pixel_data[vis_frame,:,:],
         color_continuous_scale='gray',

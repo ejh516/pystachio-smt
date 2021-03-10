@@ -60,6 +60,8 @@ class Trajectory:
         self.length += 1
 
 def build_trajectories(all_spots, params):
+    max_displacement = params.get('tracking', 'max_displacement')
+    min_traj_len = params.get('tracking', 'min_traj_len')
     trajectories = []
     traj_num = 0
 
@@ -79,7 +81,7 @@ def build_trajectories(all_spots, params):
                 candidate_dist = np.linalg.norm(
                     all_spots[frame].positions[spot, :] - candidate.path[-1]
                 )
-                if candidate_dist < params.max_displacement:
+                if candidate_dist < max_displacement:
                     close_candidates.append(candidate)
 
             if len(close_candidates) == 0:
@@ -94,7 +96,7 @@ def build_trajectories(all_spots, params):
                 trajectories.append(Trajectory(traj_num, all_spots[frame], spot))
                 traj_num += 1
 
-    filtered_trajectories = list(filter(lambda x: x.length >= params.min_traj_len, trajectories))
+    filtered_trajectories = list(filter(lambda x: x.length >= min_traj_len, trajectories))
 
     actual_traj_num = 0
     for traj in filtered_trajectories:
@@ -104,11 +106,8 @@ def build_trajectories(all_spots, params):
     return filtered_trajectories
 
 
-def write_trajectories(trajectories, params, simulated=False):
-    if simulated:
-        f = open(params.seed_name + "_simulated_trajectories.tsv", "w")
-    else:
-        f = open(params.seed_name + "_trajectories.tsv", "w")
+def write_trajectories(trajectories, filename):
+    f = open(filename, "w")
     f.write(f"trajectory\tframe\tx\ty\tspot_intensity\tbg_intensity\tSNR\tconverged\n")
     for traj in trajectories:
         for frame in range(traj.start_frame, traj.end_frame + 1):

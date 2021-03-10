@@ -63,16 +63,20 @@ class Spots:
             self.positions[i, :] = positions[i]
 
     def find_in_frame(self, frame, params):
+        struct_disk_radius = params.get('tracking', 'struct_disk_radius')
+        filter_image = params.get('tracking', 'filter_image')
+        bw_threshold_tolerance = params.get('tracking', 'bw_threshold_tolerance')
+
         img_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # Get structural element (map with disk of ones in a square of 0s) [strel]
-        disk_size = 2 * params.disk_radius - 1
+        disk_size = 2 * struct_disk_radius - 1
         disk_kernel = cv2.getStructuringElement(
             cv2.MORPH_ELLIPSE, (disk_size, disk_size)
         )
 
         # Optionally apply gaussian filtering to the frame
-        if params.filter_image == "gaussian":
+        if filter_image == "gaussian":
             blurred_frame = cv2.GaussianBlur(img_frame, (3, 3), 0)
         else:
             blurred_frame = img_frame.copy()
@@ -85,7 +89,7 @@ class Spots:
         hist_data[0] = 0
 
         peak_width, peak_location = fwhm(hist_data)
-        bw_threshold = int(peak_location + params.bw_threshold_tolerance * peak_width)
+        bw_threshold = int(peak_location + bw_threshold_tolerance * peak_width)
 
         # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
         blurred_tophatted_frame = cv2.GaussianBlur(tophatted_frame, (3, 3), 0)
@@ -137,6 +141,8 @@ class Spots:
         self.set_positions(new_positions)
 
     def filter_candidates(self, frame, params):
+        subarray_halfwidth = params.get('tracking', 'spot_halfwidth')
+        snr_filter_cutoff = params.get('tracking', 'snr_filter_cutoff')
         positions = []
         clipping = []
         bg_intensity = []
@@ -148,17 +154,17 @@ class Spots:
 
         for i in range(self.num_spots):
             # Fliter spots that are too noisy to be useful candidates
-            if self.snr[i] <= params.snr_filter_cutoff:
+            if self.snr[i] <= snr_filter_cutoff:
                 continue
             # Fitler spots that are outside of any existing mask
             if frame.has_mask and frame.mask_data[round(self.positions[i,1]), round(self.positions[i,0])] == 0:
                 continue
             
             # Filter spots too close to the edge to give good numbers
-            if self.positions[i,0] < params.subarray_halfwidth \
-              or self.positions[i,0] >= frame.frame_size[1] - params.subarray_halfwidth \
-              or self.positions[i,1] < params.subarray_halfwidth \
-              or self.positions[i,1] >= frame.frame_size[0] - params.subarray_halfwidth:
+            if self.positions[i,0] < subarray_halfwidth \
+              or self.positions[i,0] >= frame.frame_size[1] - subarray_halfwidth \
+              or self.positions[i,1] < subarray_halfwidth \
+              or self.positions[i,1] >= frame.frame_size[0] - subarray_halfwidth:
                 continue
 
             positions.append(self.positions[i, :])
@@ -221,18 +227,21 @@ class Spots:
                 sys.exit(f"Unable to find a match for spot {i}, frame {self.frame}")
 
     def get_spot_intensities(self, frame, params):
+        subarray_halfwidth = params.get('tracking', 'spot_halfwidth')
+        inner_mask_radius = params.get('tracking', 'inner_mask_radius')
+
         for i in range(self.num_spots):
             x = round(self.positions[i, 0])
             y = round(self.positions[i, 1])
             # Create a tmp array with the centre of the spot in the centre
             tmp = frame[
-                y - params.subarray_halfwidth : y + params.subarray_halfwidth+1, 
-                x - params.subarray_halfwidth : x + params.subarray_halfwidth + 1
+                y - subarray_halfwidth : y + subarray_halfwidth+1, 
+                x - subarray_halfwidth : x + subarray_halfwidth + 1
             ] 
             spotmask = np.zeros(tmp.shape)
             cv2.circle(spotmask, 
-                    (params.subarray_halfwidth, params.subarray_halfwidth),
-                    params.inner_mask_radius,
+                    (subarray_halfwidth, subarray_halfwidth),
+                    inner_mask_radius,
                     1,
                     -1
             )
@@ -244,10 +253,16 @@ class Spots:
             self.spot_intensity[i] = intensity
 
     def refine_centres(self, frame, params):
+        subarray_halfwidth = params.get('tracking', 'spot_halfwidth')
+        gauss_mask_sigma = params.get('tracking', 'gauss_mask_sigma')
+        gauss_mask_max_iter = params.get('tracking', 'gauss_mask_max_iter')
+        inner_mask_radius = params.get('tracking', 'inner_mask_radius')
+        snr_filter_cutoff = params.get('tracking', 'snr_filter_cutoff')
+
         image = frame.as_image()
         # Refine the centre of each spot independently
         for i_spot in range(self.num_spots):
-            r = params.subarray_halfwidth
+            r = subarray_halfwidth
             N = 2 * r + 1
 
             # Get the centre estimate, make sure the spot_region fits in the frame
@@ -287,14 +302,14 @@ class Spots:
             spot_intensity = 0
             bg_intensity = 0
             snr = 0
-            while not converged and iteration < params.gauss_mask_max_iter:
+            while not converged and iteration < gauss_mask_max_iter:
                 iteration += 1
 
                 # Generate the inner mask
                 inner_mask = np.where(
                     (coords[0, :, :] - p_estimate[0]) ** 2
                     + (coords[1, :, :] - p_estimate[1]) ** 2
-                    <= params.inner_mask_radius ** 2,
+                    <= inner_mask_radius ** 2,
                     1,
                     0,
                 )
@@ -306,7 +321,7 @@ class Spots:
                     coords[:, :, :] - p_estimate[:, np.newaxis, np.newaxis]
                 ) ** 2
                 exponent = -(coords_sq[0, :, :] + coords_sq[1, :, :]) / (
-                    2 * params.gauss_mask_sigma ** 2
+                    2 * gauss_mask_sigma ** 2
                 )
                 gauss_mask = np.exp(exponent)
 
@@ -351,7 +366,7 @@ class Spots:
                 # Don't bother reiterating this spot if it's too low
                 snr = abs(spot_intensity / (bg_std*np.sum(inner_mask)))
 #EJH#                 snr = abs(spot_intensity / (bg_std*np.sum(inner_mask)))
-                if snr <= params.snr_filter_cutoff:
+                if snr <= snr_filter_cutoff:
                     break
 
             self.bg_intensity[i_spot] = bg_average

@@ -73,54 +73,48 @@ class ImageData:
             img = self.pixel_data.astype(np.uint16)
         return img
 
-    def read(self, params):
+    def read(self, filename, params):
         # Determine the filename from the seedname
-        if os.path.isfile(params.seed_name):
-            filename = params.seed_name
-        elif os.path.isfile(params.seed_name + ".tif"):
-            filename = params.seed_name + ".tif"
-        else:
-            sys.exit(f"Unable to find file matching '{params.seed_name}'")
-
         # Read in the file and get the data size
         pixel_data = tifffile.imread(filename)
+        mask_file = params.get('general', 'mask_file')
+        start_frame = params.get('image', 'start_frame')
+        end_frame = params.get('image', 'end_frame')
+        channel_split = params.get('image', 'channel_split')
 
-        if params.use_mask:
-            mask_file = params.seed_name + "_mask.tif"
-            if os.path.isfile(mask_file):
-                print(f"Using mask {mask_file}")
-                filename = params.seed_name
-                pixel_mask = tifffile.imread(mask_file)
-                pixel_mask = np.where(pixel_mask > 0, 1, 0)
-                self.has_mask = True
-                self.mask_data = pixel_mask
+        if mask_file:
+            pixel_mask = tifffile.imread(mask_file)
+            pixel_mask = np.where(pixel_mask > 0, 1, 0)
+            self.has_mask = True
+            self.mask_data = pixel_mask
         else:
             self.use_mask = False
 
-        if params.num_frames:
-            self.num_frames = min(params.num_frames, pixel_data.shape[0])
-        else:
-            self.num_frames = pixel_data.shape[0]
+        if end_frame < 0:
+            end_frame = pixel_data.shape[0]
 
-        if params.split_frame:
+        if channel_split == 'Vertical':
             self.frame_size = (pixel_data.shape[2]//2, pixel_data.shape[1])
+        elif channel_split == 'Horizontal':
+            self.frame_size = (pixel_data.shape[2], pixel_data.shape[1]//2)
         else:
             self.frame_size = (pixel_data.shape[2], pixel_data.shape[1])
 
         self.num_pixels = self.frame_size[0] * self.frame_size[1]
 
         # Store the frames in a list
-        self.pixel_data = pixel_data[:self.num_frames, :self.frame_size[1], :self.frame_size[0]]
+        self.pixel_data = pixel_data[start_frame:end_frame+1, :self.frame_size[1], :self.frame_size[0]]
+        self.num_frames = pixel_data.shape[0]
 
         self.determine_first_frame()
 
         self.exists = True
 
-    def write(self, params):
+    def write(self, filename):
         # Create the data array
         img_data = self.as_image(drop_dim=False)
 
-        tifffile.imsave(params.seed_name + ".tif", img_data)
+        tifffile.imsave(filename, img_data)
 
     def rotate(self, angle):
         if angle % 90 == 0:

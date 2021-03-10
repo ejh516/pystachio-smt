@@ -32,19 +32,23 @@ import images
 
 
 def track(params):
+    num_procs = params.get('general', 'num_procs')
+    img_file = params.get('general', 'name') + ".tif"
+    traj_file = params.get('general', 'name') + "_trajectories.tsv"
+
     # Read in the image data
     image_data = images.ImageData()
-    image_data.read(params)
+    image_data.read(img_file, params)
 
     # For each frame, detect spots
     all_spots = []
-    if params.num_procs == 0:
+    if num_procs == 0:
         for frame in range(image_data.num_frames):
             all_spots.append(track_frame(image_data[frame], frame, params))
 
     else:
         res = [None] * image_data.num_frames
-        with mp.Pool(params.num_procs) as pool:
+        with mp.Pool(num_procs) as pool:
             for frame in range(image_data.num_frames):
                 res[frame] = pool.apply_async(track_frame, (image_data[frame], frame, params))
             for frame in range(image_data.num_frames):
@@ -52,7 +56,7 @@ def track(params):
 
     # Link the spot trajectories across the frames
     trajs = trajectories.build_trajectories(all_spots, params)
-    trajectories.write_trajectories(trajs, params)
+    trajectories.write_trajectories(trajs, traj_file)
 
 def track_frame(frame_data, frame, params):
         # Find the spots in this frame

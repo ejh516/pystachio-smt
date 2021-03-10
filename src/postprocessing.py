@@ -15,10 +15,11 @@ import trajectories
 
 def postprocess(params, simulated=False):
     trajs = []
+    name = params.get('general', 'name')
     if simulated:
-        trajs = trajectories.read_trajectories(params.seed_name + "_simulated_trajectories.tsv")
+        trajs = trajectories.read_trajectories(name + "_simulated_trajectories.tsv")
     else:
-        trajs = trajectories.read_trajectories(params.seed_name + "_trajectories.tsv")
+        trajs = trajectories.read_trajectories(name + "_trajectories.tsv")
 
     spots = trajectories.to_spots(trajs)
     print(f"Looking at {len(trajs)} trajectories across {len(spots)} frames")
@@ -92,11 +93,14 @@ def get_isingle(intensities):
 
 
 def get_diffusion_coef(traj_list, params):
+    MSD_num_points = params.get('postprocessing', 'msd_num_points')
+    pixel_size = params.get('image', 'pixel_size')
+    frame_time = params.get('image', 'frame_time')
     diffusion_coefs = []
     loc_precisions = []
     for traj in traj_list:
         trajectory_length = traj.length
-        if trajectory_length < params.MSD_num_points + 1:
+        if trajectory_length < MSD_num_points + 1:
             continue
         MSD = np.zeros(trajectory_length - 1)  # mean squared displacement
         n = np.zeros(
@@ -104,20 +108,20 @@ def get_diffusion_coef(traj_list, params):
         )  # used to measure number of trajectories of given length for weighting
         tau = np.zeros(trajectory_length - 1)  # times between MSDs
         track_lengths = np.zeros(trajectory_length - 1)
-        x = np.array(traj.path)[:, 0] * params.pixelSize
-        y = np.array(traj.path)[:, 1] * params.pixelSize
+        x = np.array(traj.path)[:, 0] * pixel_size
+        y = np.array(traj.path)[:, 1] * pixel_size
         for i in range(1, trajectory_length):
             sqd = (x[i:] - x[: trajectory_length - i]) ** 2 + (
                 y[i:] - y[: trajectory_length - i]
             ) ** 2
             MSD[i - 1] = np.mean(sqd)
             track_lengths[i - 1] = len(sqd)
-            tau[i - 1] = i * params.frameTime
-        tau = tau[: params.MSD_num_points]
-        MSD = MSD[: params.MSD_num_points]
-        track_lengths = track_lengths[: params.MSD_num_points]
-        weights = track_lengths[: params.MSD_num_points].astype("float32") / float(
-            np.amax(track_lengths[: params.MSD_num_points])
+            tau[i - 1] = i * frame_time
+        tau = tau[: MSD_num_points]
+        MSD = MSD[: MSD_num_points]
+        track_lengths = track_lengths[: MSD_num_points]
+        weights = track_lengths[: MSD_num_points].astype("float32") / float(
+            np.amax(track_lengths[: MSD_num_points])
         )
         plt.plot(tau, MSD)
         plt.xlabel(r"$\tau$")
@@ -148,6 +152,9 @@ def plot_traj_intensities(trajs):
 
 
 def get_stoichiometries(trajs, isingle, params):
+    stoic_method = params.get('postprocessing', 'stoic_method')
+    num_stoic_frames = params.get('postprocessing', 'num_stoic_frames')
+    frame_time = params.get('image', 'frame_time')
     # Let's do the easy part first - the ones where they do not start at the start
     stoics = []
     for traj in trajs:
@@ -156,27 +163,27 @@ def get_stoichiometries(trajs, isingle, params):
         if False: #traj.start_frame != 0:
             traj.stoichiometry = traj.intensity[0] / isingle
         else:
-            if params.stoic_method == "initial":
+            if stoic_method == "Initial":
                 # Initial intensity
                 traj.stoichiometry = traj.intensity[0] / isingle
-            elif params.stoic_method == "mean":
+            elif stoic_method == "Mean":
                 # Mean of first N frames
                 traj.stoichiometry = (
-                    np.mean(traj.intensity[: params.num_stoic_frames]) / isingle
+                    np.mean(traj.intensity[: num_stoic_frames]) / isingle
                 )
-            elif params.stoic_method == "linear_fit":
-                if traj.length <= params.num_stoic_frames:
+            elif stoic_method == "Linear":
+                if traj.length <= num_stoic_frames:
                     xdata = (
-                        np.arange(1, traj.length, dtype="float") * params.frameTime
+                        np.arange(1, traj.length, dtype="float") * frame_time
                     )
                     ydata = traj.intensity[1: traj.length]
                     popt, pcov = curve_fit(straightline, xdata, ydata)
                 else:
                     xdata = (
-                        np.arange(1, params.num_stoic_frames + 1, dtype="float")
-                        * params.frameTime
+                        np.arange(1, num_stoic_frames + 1, dtype="float")
+                        * frame_time
                     )
-                    ydata = traj.intensity[1: params.num_stoic_frames+1]
+                    ydata = traj.intensity[1: num_stoic_frames+1]
                     popt, pcov = curve_fit(straightline, xdata, ydata)
                 intercept = popt[1]
                 if intercept > 0:
