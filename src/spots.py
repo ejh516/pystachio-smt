@@ -43,6 +43,7 @@ class Spots:
             self.laser_on_frame = 0
             self.converged = np.zeros([num_spots], dtype=np.int8)
             self.exists = True
+            self.width = np.zeros((num_spots,2))
         else:
             self.frame = frame
             self.exists = False
@@ -360,3 +361,29 @@ class Spots:
             self.converged[i_spot] = converged
 
             self.positions[i_spot, :] = p_estimate
+            
+    def get_spot_widths(self, frame, params):
+        for i in range(self.num_spots):
+            x = round(self.positions[i, 0])
+            y = round(self.positions[i, 1])
+            # Create a tmp array with the centre of the spot in the centre
+            tmp = frame[
+                y - params.subarray_halfwidth : y + params.subarray_halfwidth+1, 
+                x - params.subarray_halfwidth : x + params.subarray_halfwidth + 1
+                ] 
+            spotmask = np.zeros(tmp.shape)
+            cv2.circle(spotmask, 
+             (params.subarray_halfwidth, params.subarray_halfwidth),
+             params.inner_mask_radius,
+             1,
+             -1
+             )
+            bgintensity = np.mean(tmp[spotmask == 0])
+            tmp = tmp - bgintensity
+            p, succ = fit2Dgaussian(tmp)
+            if succ==1: # the fit is OK
+                self.width[i,0] = p[3]
+                self.width[i,1] = p[4]
+            else: # something went wrong
+                self.width[i,0] = params.PSFwidth
+                self.width[i,1] = params.PSFwidth

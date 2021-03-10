@@ -18,9 +18,12 @@ Contains:
     function get_distance_list
     function find_local_maxima
     function ultimate_erode
+    function gaussian
+    functino moments
+    function fit_gaussian
 
 Author:
-    Edward Higgins
+    Edward Higgins & JWS
 
 Version: 0.2.0
 """
@@ -29,6 +32,7 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import optimize
 
 from numba import jit
 
@@ -165,4 +169,37 @@ def uer_jittable(img, distance_list):
                     print(f"WARNING: Unable to find any spots in this frame")
                     return np.zeros(img.shape)
     return img_dist
+
+def gaussian(height, center_x, center_y, width_x, width_y):
+    """Returns a gaussian function with the given parameters"""
+    width_x = float(width_x)
+    width_y = float(width_y)
+    return lambda x,y: height*np.exp(
+                -(((center_x-x)/width_x)**2+((center_y-y)/width_y)**2)/2)
+
+def moments(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution by calculating its
+    moments """
+    # total = data.sum()
+    # X, Y = np.indices(data.shape)
+    # x = (X*data).sum()/total
+    # y = (Y*data).sum()/total
+    # if int(y)>=16 or int(y)<0: y=8
+    # if int(x)>=16 or int(x)<0: x=8
+    # col = data[:, int(y)]
+    # width_x = np.sqrt(np.abs((np.arange(col.size)-x)**2*col).sum()/col.sum())
+    # row = data[int(x), :]
+    # width_y = np.sqrt(np.abs((np.arange(row.size)-y)**2*row).sum()/row.sum())
+    # height = data.max()
+    return 1000, 8, 8, 1.5, 1.5 #height, x, y, width_x, width_y
+
+def fit2Dgaussian(data):
+    """Returns (height, x, y, width_x, width_y)
+    the gaussian parameters of a 2D distribution found by a fit"""
+    params = moments(data)
+    errorfunction = lambda p: np.ravel(gaussian(*p)(*np.indices(data.shape)) -
+                                 data)
+    p, success = optimize.leastsq(errorfunction, params)
+    return p, success
 

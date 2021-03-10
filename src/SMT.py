@@ -35,7 +35,9 @@ import dash_ui.app as app
 def main():
     params = parameters.Parameters()
     params.read(sys.argv)
-
+    stepwise = False
+    sim=False
+    
     for task in params.task:
         if task == "app":
             app.launch_app(params)
@@ -45,15 +47,17 @@ def main():
 
         elif task == "simulate":
             simulation.simulate(params)
+            sim=True
 #EJH#             spot_data.write(params)
 
         elif task=="simulate_stepwise":
-            image_data = simulation.simulate_stepwise_bleaching(params)
+            image_data, stoichiometry_ground_truth = simulation.simulate_stepwise_bleaching(params)
             image_data.write(params)
-            trajectories.write_trajectories(true_trajectories, params,simulated=True)
+            stepwise = True
+            # trajectories.write_trajectories(true_trajectories, params,simulated=True)
 
         elif task == "postprocess":
-            postprocessing.postprocess(params)
+            postprocessing.postprocess(params, simulated=sim, stepwise=stepwise)
 
         elif task == "view":
             visualisation.render(params)

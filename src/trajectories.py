@@ -45,6 +45,8 @@ class Trajectory:
         self.length = 1
         self.stoichiometry = 0
         self.converged = [spots.converged[spot_id]]
+        self.linked_traj = None
+        self.width = [spots.width[spot_id]]
 
     def extend(self, spots, spot_id):
         if spots.frame > self.end_frame + 1:
@@ -104,17 +106,20 @@ def build_trajectories(all_spots, params):
     return filtered_trajectories
 
 
-def write_trajectories(trajectories, params, simulated=False):
+def write_trajectories(trajectories, params, simulated=False, channel=None):
     if simulated:
         f = open(params.seed_name + "_simulated_trajectories.tsv", "w")
     else:
-        f = open(params.seed_name + "_trajectories.tsv", "w")
-    f.write(f"trajectory\tframe\tx\ty\tspot_intensity\tbg_intensity\tSNR\tconverged\n")
+        if channel is not None:
+            f = open(params.seed_name + "_"+channel+"channel_trajectories.tsv", "w")
+        else:
+            f = open(params.seed_name + "_trajectories.tsv", "w")
+    f.write(f"trajectory\tframe\tx\ty\tspot_intensity\tbg_intensity\tSNR\tconverged\twidthx\twidthy\n")
     for traj in trajectories:
         for frame in range(traj.start_frame, traj.end_frame + 1):
             i = frame - traj.start_frame
             f.write(
-                f"{traj.id}\t{frame}\t{traj.path[i][0]}\t{traj.path[i][1]}\t{traj.intensity[i]}\t{traj.bg_intensity[i]}\t{traj.snr[i]}\t{traj.converged[i]}\n"
+                f"{traj.id}\t{frame}\t{traj.path[i][0]}\t{traj.path[i][1]}\t{traj.intensity[i]}\t{traj.bg_intensity[i]}\t{traj.snr[i]}\t{traj.converged[i]}\t{traj.width[0][0]}\t{traj.width[0][1]}\n"
             )
     f.close()
 
@@ -147,6 +152,7 @@ def to_spots(trajs):
         spot_intensity = []
         snr = []
         converged = []
+        width = []
         for traj in trajs:
 
             if traj.end_frame > frame:
@@ -161,6 +167,7 @@ def to_spots(trajs):
             bg_intensity.append(traj.bg_intensity[i])
             snr.append(traj.snr[i])
             converged.append(traj.converged[i])
+            width.append(traj.width)
 
 
         spots = Spots(len(positions), frame)
@@ -168,7 +175,8 @@ def to_spots(trajs):
         spots.spot_intensity = np.array(spot_intensity)
         spots.bg_intensity = np.array(bg_intensity)
         spots.snr = np.array(snr)
-        spots.converged = np.array(bg_intensity, dtype=np.int8)
+        spots.converged = np.array(converged, dtype=np.int8)
+        spots.width=np.array(width)
         all_spots.append(spots)
 
         frame += 1
@@ -194,6 +202,7 @@ def read_trajectories(filename):
             spot.bg_intensity[0] = float(line[5])
             spot.snr[0] = float(line[6])
             spot.converged[0] = int(line[7])
+            spot.width[0,:] = [float(line[8]),float(line[9])]
 
             if traj_id != prev_traj_id:
                 trajectories.append(Trajectory(traj_id, spot, 0))

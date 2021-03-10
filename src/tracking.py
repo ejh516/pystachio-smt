@@ -25,7 +25,7 @@ import sys
 
 import numpy as np
 import multiprocessing as mp
-
+import matplotlib.pyplot as plt
 import spots
 import trajectories
 import images
@@ -36,23 +36,54 @@ def track(params):
     image_data = images.ImageData()
     image_data.read(params)
 
-    # For each frame, detect spots
-    all_spots = []
-    if params.num_procs == 0:
+    if params.ALEX==True:
+        imageL=np.zeros((image_data.num_frames//2,image_data.frame_size[1],image_data.frame_size[0]//2))
+        imageR=np.zeros((image_data.num_frames//2,image_data.frame_size[1],image_data.frame_size[0]//2))
+        if params.start_channel=='L':
+            for i in range(0,image_data.num_frames-1,2):
+                imageL[i//2,:,:] = image_data.pixel_data[i,:,:image_data.frame_size[0]//2]
+                imageR[i//2,:,:] = image_data.pixel_data[i+1,:,image_data.frame_size[0]//2:]
+        else:
+            for i in range(0,image_data.num_frames-1,2):
+                imageR[i//2,:,:] = image_data.pixel_data[i,:,:image_data.frame_size[0]//2]
+                imageL[i//2,:,:] = image_data.pixel_data[i+1,:,image_data.frame_size[0]//2:]
+        image_data.num_frames = image_data.num_frames//2
+
+        #LHS
+        image_data.pixel_data = imageL
+        image_data.frame_size = [image_data.frame_size[0]//2,image_data.frame_size[1]]
+        all_spots = []
         for frame in range(image_data.num_frames):
             all_spots.append(track_frame(image_data[frame], frame, params))
+        trajs = trajectories.build_trajectories(all_spots, params)
+        trajectories.write_trajectories(trajs, params, channel='L')
 
+        #RHS
+        image_data.pixel_data = imageR
+        all_spots = []
+        for frame in range(image_data.num_frames):
+            all_spots.append(track_frame(image_data[frame], frame, params))
+        trajs = trajectories.build_trajectories(all_spots, params)
+        trajectories.write_trajectories(trajs, params, channel='R')
+
+    # For each frame, detect spots
     else:
-        res = [None] * image_data.num_frames
-        with mp.Pool(params.num_procs) as pool:
+        all_spots = []
+        if params.num_procs == 0:
             for frame in range(image_data.num_frames):
-                res[frame] = pool.apply_async(track_frame, (image_data[frame], frame, params))
-            for frame in range(image_data.num_frames):
-                all_spots.append(res[frame].get())
+                all_spots.append(track_frame(image_data[frame], frame, params))
 
-    # Link the spot trajectories across the frames
-    trajs = trajectories.build_trajectories(all_spots, params)
-    trajectories.write_trajectories(trajs, params)
+        else:
+            res = [None] * image_data.num_frames
+            with mp.Pool(params.num_procs) as pool:
+                for frame in range(image_data.num_frames):
+                    res[frame] = pool.apply_async(track_frame, (image_data[frame], frame, params))
+                for frame in range(image_data.num_frames):
+                    all_spots.append(res[frame].get())
+
+        # Link the spot trajectories across the frames
+        trajs = trajectories.build_trajectories(all_spots, params)
+        trajectories.write_trajectories(trajs, params)
 
 def track_frame(frame_data, frame, params):
         # Find the spots in this frame
@@ -68,7 +99,7 @@ def track_frame(frame_data, frame, params):
         frame_spots.filter_candidates(frame_data, params)
 
         frame_spots.get_spot_intensities(frame_data.as_image()[:,:], params)
-
+        frame_spots.get_spot_widths(frame_data.as_image()[:,:], params)
         print(
             f"Frame {frame:4d}: found {frame_spots.num_spots:3d} spots "
             f"({found_spots:3d} identified, "
