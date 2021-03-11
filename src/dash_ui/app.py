@@ -66,6 +66,21 @@ def update_slider(render_selection, vis_frame, seedname):
             fig.add_trace(go.Scatter(x=Xs, y=Ys, marker=dict(color=color, size=5)))
             fig.update_layout(showlegend=False)
 
+    print(relayout_data)
+    if ('xaxis.range[0]' in relayout_data or
+        'yaxis.range[0]' in relayout_data):
+        fig['layout']['yaxis']['autorange'] = None
+        fig['layout']['yaxis']['range'] = [
+            relayout_data['yaxis.range[0]'],
+            relayout_data['yaxis.range[1]']
+        ]
+
+        fig['layout']['xaxis']['range'] = [
+            relayout_data['xaxis.range[0]'],
+            relayout_data['xaxis.range[1]']
+        ]
+        print( fig['layout'])
+
 
     label = f"Frame {vis_frame}"
     return fig, label
