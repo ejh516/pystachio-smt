@@ -80,19 +80,19 @@ class Spots:
         # Apply top-hat filtering [imtophat]
         tophatted_frame = cv2.morphologyEx(blurred_frame, cv2.MORPH_TOPHAT, disk_kernel)
 
-        # Get b/w threshold value from the histogram
-        hist_data = cv2.calcHist([tophatted_frame], [0], None, [256], [0, 256])
+        squashed_frame = (tophatted_frame / np.max(tophatted_frame) * 256).astype(np.uint8)
+        hist_data = cv2.calcHist([squashed_frame], [0], None, [256], [0, 256])
         hist_data[0] = 0
 
         peak_width, peak_location = fwhm(hist_data)
         bw_threshold = int(peak_location + params.bw_threshold_tolerance * peak_width)
 
         # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
-        blurred_tophatted_frame = cv2.GaussianBlur(tophatted_frame, (3, 3), 0)
+        blurred_squashed_frame = cv2.GaussianBlur(squashed_frame, (3, 3), 0)
 
         # Convert the filtered image to b/w [im2bw]
         bw_frame = cv2.threshold(
-            blurred_tophatted_frame, bw_threshold, 255, cv2.THRESH_BINARY
+            blurred_squashed_frame, bw_threshold, 255, cv2.THRESH_BINARY
         )[1]
 
         # "Open" the b/w image (in a morphological sense) [imopen]
