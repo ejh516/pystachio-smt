@@ -94,7 +94,7 @@ def fwhm(data):
         trail_t = None
         x_width = 0
 
-    return (x_width, extremum_val)
+    return (x_width[0], extremum_val)
 
 
 def get_distance_list(r_max):

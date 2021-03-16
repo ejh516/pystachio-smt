@@ -13,7 +13,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
 import webbrowser
@@ -36,8 +36,9 @@ def launch_app(params):
         Output('render-image-frame', 'children'),
         Input('render-selection','value'),
         Input('render-image-slider','value'),
-        Input('render-image-name','children'))
-def update_slider(render_selection, vis_frame, seedname):
+        Input('render-image-name','children'),
+        State('render-image-graph', 'relayoutData'))
+def update_slider(render_selection, vis_frame, seedname, relayout_data):
     params = Parameters()
     params.seed_name = seedname
     print(f"Opening {params.seed_name}")
@@ -47,7 +48,11 @@ def update_slider(render_selection, vis_frame, seedname):
         image_data.pixel_data[vis_frame,:,:],
         color_continuous_scale='gray',
         zmin = 0,
-        zmax = np.max(image_data[vis_frame].pixel_data)
+        zmax = np.max(image_data[vis_frame].pixel_data),
+        aspect='equal',
+        width=2000,
+        height=2000,
+
     )
     if (render_selection == "render-all-trajectories" or
         render_selection == "render-current-trajectories"):
@@ -63,10 +68,9 @@ def update_slider(render_selection, vis_frame, seedname):
             for frame in range(traj.start_frame, traj.end_frame):
                 Xs.append(traj.path[frame - traj.start_frame][0])
                 Ys.append(traj.path[frame - traj.start_frame][1])
-            fig.add_trace(go.Scatter(x=Xs, y=Ys, marker=dict(color=color, size=5)))
+            fig.add_trace(go.Scatter(x=Xs, y=Ys, marker=dict(color=color, size=8)))
             fig.update_layout(showlegend=False)
 
-    print(relayout_data)
     if ('xaxis.range[0]' in relayout_data or
         'yaxis.range[0]' in relayout_data):
         fig['layout']['yaxis']['autorange'] = None

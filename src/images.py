@@ -25,7 +25,7 @@ Version: 0.2.0
 import sys
 import os
 
-import cv2 as cv
+import cv2
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -110,6 +110,12 @@ class ImageData:
         self.num_pixels = self.frame_size[0] * self.frame_size[1]
 
         # Store the frames in a list
+#EJH#         for frame in range(self.num_frames):
+#EJH#             # Optionally apply gaussian filtering to the frame
+#EJH#             if params.filter_image == "gaussian":
+#EJH#                 pixel_data[frame,:,:] = cv2.GaussianBlur(pixel_data[frame,:,:], (3, 3), 0)
+#EJH# 
+
         self.pixel_data = pixel_data[:self.num_frames, :self.frame_size[1], :self.frame_size[0]]
 
         self.determine_first_frame()

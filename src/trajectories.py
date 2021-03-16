@@ -71,6 +71,9 @@ def build_trajectories(all_spots, params):
     # Construct trajectories for the rest of the frames
     for frame in range(1, len(all_spots)):
         assigned_spots = []
+        none_close = 0
+        one_close = 0
+        many_close = 0
         for spot in range(all_spots[frame].num_spots):
             close_candidates = []
             for candidate in trajectories:
@@ -83,16 +86,21 @@ def build_trajectories(all_spots, params):
                     close_candidates.append(candidate)
 
             if len(close_candidates) == 0:
+                none_close += 1
+
                 trajectories.append(Trajectory(traj_num, all_spots[frame], spot))
                 traj_num += 1
 
             elif len(close_candidates) == 1:
+                one_close += 1
 
                 close_candidates[0].extend(all_spots[frame], spot)
 
             else:
+                many_close += 1
                 trajectories.append(Trajectory(traj_num, all_spots[frame], spot))
                 traj_num += 1
+        print(f"Frame {frame}: {one_close}\t{none_close}\t{many_close}")
 
     filtered_trajectories = list(filter(lambda x: x.length >= params.min_traj_len, trajectories))
 
@@ -101,7 +109,7 @@ def build_trajectories(all_spots, params):
         traj.id = actual_traj_num
         actual_traj_num += 1
 
-    return filtered_trajectories
+    return trajectories
 
 
 def write_trajectories(trajectories, params, simulated=False):

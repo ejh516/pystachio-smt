@@ -62,7 +62,7 @@ class Spots:
         for i in range(self.num_spots):
             self.positions[i, :] = positions[i]
 
-    def find_in_frame(self, frame, params):
+    def find_in_frame(self, frame, params, frame_num):
         img_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # Get structural element (map with disk of ones in a square of 0s) [strel]
@@ -81,38 +81,49 @@ class Spots:
         tophatted_frame = cv2.morphologyEx(blurred_frame, cv2.MORPH_TOPHAT, disk_kernel)
 
         squashed_frame = (tophatted_frame / np.max(tophatted_frame) * 256).astype(np.uint8)
-        hist_data = cv2.calcHist([squashed_frame], [0], None, [256], [0, 256])
+        gray_frame = cv2.cvtColor(squashed_frame, cv2.COLOR_BGR2GRAY)
+        hist_data = cv2.calcHist([gray_frame], [0], None, [256], [0, 256])
         hist_data[0] = 0
 
         peak_width, peak_location = fwhm(hist_data)
         bw_threshold = int(peak_location + params.bw_threshold_tolerance * peak_width)
 
         # Apply gaussian filter to the top-hatted image [fspecial, imfilter]
-        blurred_squashed_frame = cv2.GaussianBlur(squashed_frame, (3, 3), 0)
+        blurred_squashed_frame = cv2.GaussianBlur(gray_frame, (3, 3), 0)
 
         # Convert the filtered image to b/w [im2bw]
         bw_frame = cv2.threshold(
-            blurred_squashed_frame, bw_threshold, 255, cv2.THRESH_BINARY
+            blurred_squashed_frame, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU
         )[1]
+#EJH#         bw_frame = cv2.adaptiveThreshold(blurred_gray_frame, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
 
         # "Open" the b/w image (in a morphological sense) [imopen]
         bw_opened = cv2.morphologyEx(
-            bw_frame, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+            bw_frame, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 1))
         )
 
         # Fill holes ofsize 1 pixel in the resulting image [bwmorph]
         bw_filled = cv2.morphologyEx(
             bw_opened,
             cv2.MORPH_CLOSE,
-            cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)),
+            cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (1, 1)),
         )
 
-        spot_locations = ultimate_erode(bw_filled[:, :, 0], frame)
+        spot_locations = ultimate_erode(bw_filled[:, :], frame)
+
+#EJH#         if frame_num == 21:
+#EJH#             plt.subplot(2,2,1),plt.hist(gray_frame.ravel(),256,[1,256])
+#EJH#             plt.subplot(2,2,2),plt.imshow(blurred_squashed_frame,'gray')
+#EJH#             plt.subplot(2,2,3),plt.imshow(bw_frame,'gray')
+#EJH#             plt.subplot(2,2,4),plt.imshow(bw_filled,'gray')
+#EJH#             if spot_locations:
+#EJH#                 plt.subplot(2,2,4),plt.scatter(np.array(spot_locations)[:,0], np.array(spot_locations)[:,1], s=2,marker='o')
+#EJH#             plt.show()
         if np.isnan(spot_locations).any():
             raise "Found nans"
         self.set_positions(spot_locations)
 
-    def merge_coincident_candidates(self):
+    def merge_coincident_candidates(self, params):
         new_positions = []
         skip = []
         for i in range(self.num_spots):
@@ -121,7 +132,7 @@ class Spots:
                 continue
 
             for j in range(i + 1, self.num_spots):
-                if sum((self.positions[i, :] - self.positions[j, :]) ** 2) < 4:
+                if sum((self.positions[i, :] - self.positions[j, :]) ** 2) < params.gauss_mask_sigma**2:
                     skip.append(j)
                     tmp_positions.append(self.positions[j, :])
 
@@ -145,20 +156,27 @@ class Spots:
         width = []
         traj_num = []
         snr = []
+        by_snr = 0
+        by_mask=0
+        by_edge = 0
 
         for i in range(self.num_spots):
             # Fliter spots that are too noisy to be useful candidates
             if self.snr[i] <= params.snr_filter_cutoff:
+                by_snr += 1
                 continue
+
             # Fitler spots that are outside of any existing mask
             if frame.has_mask and frame.mask_data[round(self.positions[i,1]), round(self.positions[i,0])] == 0:
+                by_mask += 1
                 continue
             
             # Filter spots too close to the edge to give good numbers
-            if self.positions[i,0] < params.subarray_halfwidth \
-              or self.positions[i,0] >= frame.frame_size[1] - params.subarray_halfwidth \
-              or self.positions[i,1] < params.subarray_halfwidth \
-              or self.positions[i,1] >= frame.frame_size[0] - params.subarray_halfwidth:
+            if (self.positions[i,0] < params.subarray_halfwidth 
+              or self.positions[i,0] >= frame.frame_size[0] - params.subarray_halfwidth 
+              or self.positions[i,1] < params.subarray_halfwidth 
+              or self.positions[i,1] >= frame.frame_size[1] - params.subarray_halfwidth):
+                by_edge += 1
                 continue
 
             positions.append(self.positions[i, :])
@@ -180,6 +198,7 @@ class Spots:
         self.traj_num = np.array(traj_num)
         self.snr = np.array(snr)
 
+        print(f"  by Edge: {by_edge}  Mask: {by_mask}  SNR: {by_snr}")
 
 
     def distance_from(self, other):
@@ -243,7 +262,7 @@ class Spots:
                 print(f"WARNING: Zero intensity found at {[x, y]}")
             self.spot_intensity[i] = intensity
 
-    def refine_centres(self, frame, params):
+    def refine_centres(self, frame, frame_num, params):
         image = frame.as_image()
         # Refine the centre of each spot independently
         for i_spot in range(self.num_spots):
@@ -334,12 +353,6 @@ class Spots:
                 )
                 estimate_change = np.linalg.norm(p_estimate - p_estimate_new)
 
-                if not np.isnan(p_estimate_new).any():
-                    p_estimate = p_estimate_new
-                else:
-                    print("WARNING: Position estimate is NaN, falied to converge")
-                    break
-
                 spot_intensity = np.sum(bg_corr_spot_pixels * inner_mask)
                 bg_std = np.std(spot_bg[bg_mask==1])
 
@@ -349,14 +362,34 @@ class Spots:
 
                 # Calculate signal-noise ratio
                 # Don't bother reiterating this spot if it's too low
-                snr = abs(spot_intensity / (bg_std*np.sum(inner_mask)))
-#EJH#                 snr = abs(spot_intensity / (bg_std*np.sum(inner_mask)))
-                if snr <= params.snr_filter_cutoff:
+                snr1 = abs(spot_intensity / (bg_std*np.sum(inner_mask)))
+                snr2 = abs(spot_intensity / (bg_average*np.sum(inner_mask)))
+                if snr1 <= params.snr_filter_cutoff:
                     break
+
+                if not np.isnan(p_estimate_new).any():
+                    p_estimate = p_estimate_new
+                else:
+                    print("WARNING: Position estimate is NaN, falied to converge")
+                    break
+
+            if frame_num == 20 and converged:
+                print(f"Spot {i_spot} of {self.num_spots}")
+                print("    SNRs = ", snr1, snr2)
+                print("    Convergence = ", estimate_change)
+
+                if iteration == params.gauss_mask_max_iter:
+                    print("    WARNING: Spot did not converge")
+
+                plt.subplot(2,1,1),plt.imshow(spot_pixels,'gray')
+                plt.subplot(2,1,1),plt.scatter([p_estimate[0]-spot_region[0][0]],[spot_region[1][1]-p_estimate[1]], s=2,marker='o',color='red')
+                plt.subplot(2,1,2),plt.imshow(image,'gray')
+                plt.subplot(2,1,2),plt.scatter([p_estimate[0]],[p_estimate[1]], s=2,marker='o',color='red')
+                plt.show()
 
             self.bg_intensity[i_spot] = bg_average
             self.spot_intensity[i_spot] = spot_intensity
-            self.snr[i_spot] = snr
+            self.snr[i_spot] = snr1
             self.converged[i_spot] = converged
 
             self.positions[i_spot, :] = p_estimate

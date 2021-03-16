@@ -57,13 +57,14 @@ def track(params):
 def track_frame(frame_data, frame, params):
         # Find the spots in this frame
         frame_spots = spots.Spots(frame=frame)
-        frame_spots.find_in_frame(frame_data.as_image()[:, :], params)
+        frame_spots.find_in_frame(frame_data.as_image()[:, :], params, frame)
         found_spots = frame_spots.num_spots
-        frame_spots.merge_coincident_candidates()
+        frame_spots.merge_coincident_candidates(params)
 
         merged_spots = frame_spots.num_spots
+
         # Iteratively refine the spot centres
-        frame_spots.refine_centres(frame_data, params)
+        frame_spots.refine_centres(frame_data, frame, params)
 
         frame_spots.filter_candidates(frame_data, params)
 
