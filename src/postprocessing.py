@@ -107,15 +107,40 @@ def colocalise(params, Ltrajs, Rtrajs):
         for i in range(0,image_data.num_frames-1,2):
             imageR[i//2,:,:] = image_data.pixel_data[i,:,:image_data.frame_size[0]//2]
             imageL[i//2,:,:] = image_data.pixel_data[i+1,:,image_data.frame_size[0]//2:]
-    s1 = []
-    s2 = []
-    for traj in Ltrajs:
-        if traj.start_frame==0:
-            s1.append([traj.path[0],traj.width,traj.id])
-    for traj in Rtrajs:
-        if traj.start_frame==0:
-            s2.append([traj.path[0],traj.width,traj.id])
-    id1, id2 = linker(params,s1,s2)
+    Llinks = []
+    Rlinks = []
+    nlinks = []
+    for i in range(params.num_frames):
+        s1 = []
+        s2 = []
+        for traj in Ltrajs:
+            if traj.start_frame<=i and traj.end_frame>=i:
+                s1.append([traj.path[i-traj.start_frame],traj.width,traj.id])
+        for traj in Rtrajs:
+            if traj.start_frame<=i and traj.end_frame>=i:
+                s2.append([traj.path[i-traj.start_frame],traj.width,traj.id])
+        id1, id2 = linker(params,s1,s2)
+        for j in range(len(id1)):
+            found = False
+            if id1[i] in Llinks:
+                indices = np.where(Llinks==id1)
+                for index in indices:
+                    if Rlinks[index]==id2[j]
+                        nlinks[index] += 1
+                        found = True
+            if found == False:
+                Llinks.append(id1[j])
+                Rlinks.append(id2[j])
+                nlinks.append(1)
+    outfile = params.seed_name + "_colocalized_trajectories.tsv"
+    f = open(outfile, 'w')
+    f.write("Left_traj\tRight_traj\n_frames")
+    for i in range(len(Llinks)):
+        if nlinks[i]>=params.colocalize_n_frames:
+            f.write("$i\t%i\t%i"%(Llinks[i], Rlinks[i], nlinks[i]))
+            
+                        
+                        
     colors = ['r','b','g','m','y','c']
     c = 0
     z, y, x = imageL.shape
@@ -141,6 +166,7 @@ def colocalise(params, Ltrajs, Rtrajs):
     plt.xticks([])
     plt.plot([x,x],[0,x], 'w--')
     plt.ylim([0,x])
+    plt.savefig("colocalised_spots.png", dpi=300)
     plt.show()
 
 def linker(params, spots1, spots2): #spots1 and spots2 are arrays going xpos, ypos, xwidth, ywidth, traj#
@@ -230,6 +256,7 @@ def plot_snr(params,snr,channel=None):
 
 
 def get_isingle(params, intensities, channel=None):
+    scale = 5
     intensities = intensities[intensities > 1]
     bandwidth = 0.07
     kde = gaussian_kde(intensities, bw_method=bandwidth)
@@ -238,18 +265,18 @@ def get_isingle(params, intensities, channel=None):
     peak = x[np.where(pdf == np.amax(pdf))].astype('int')
     peakval = np.amax(pdf)
     fig, ax1 = plt.subplots()
-    plt.xlabel("Intensity (a.u.)")
-    plt.ylabel("N")
+    plt.xlabel("Intensity (camera counts per pixel x$10^%i$)"%(scale))
+    plt.ylabel("Number of foci")
     l1 = ax1.hist(
-        intensities,
-        bins=np.arange(0, np.amax(intensities) + 100, 100),
+        intensities/10**scale,
+        bins=np.arange(0, np.amax(intensities/10**scale) + 100/10**scale, 100/10**scale),
         label="Raw data", color="gray"
     )
     ax2 = ax1.twinx()
-    l2 = ax2.plot(x, pdf, "k-", label="Gaussian KDF")
-    plt.ylabel("Probability")
+    l2 = ax2.plot(x/10**scale, pdf*10**scale, "k-", label="Gaussian KDE")
+    plt.ylabel("Probability density (a.u.)")
     ax2.ticklabel_format(axis="y", style="sci", scilimits=(0, 2))
-    l3 = ax1.plot([peak,peak],[0,10], 'r--', label="Isingle", lw=2)
+    l3 = ax1.plot([peak/10**scale,peak/10**scale],[0,10], 'r--', label="Isingle", lw=2)
     if channel=="L": 
         plt.title("Left hand channel intensity plot\nIsingle = %i"%(np.round(peak)))
         outseed = params.seed_name + "Lchannel_intensities"
@@ -257,7 +284,7 @@ def get_isingle(params, intensities, channel=None):
         plt.title("Right hand channel intensities plot\nIsingle = %i"%(np.round(peak)))
         outseed = params.seed_name + "Rchannel_intensity"
     else:
-        plt.title("Whole frame intensities plot\nIsingle = %i"%(np.round(peak)))
+        #plt.title("Whole frame intensities\nIsingle = %i"%(np.round(peak)))
         outseed = params.seed_name + "_intensity"
     lns = l2+l3
     labs = [l.get_label() for l in lns]
@@ -314,7 +341,7 @@ def get_diffusion_coef(traj_list, params, channel=None):
     plt.show()
     plt.hist(diffusion_coefs)
     plt.xlabel("Diffusion coefficient ($\mu$m$^{2}$s$^{-1}$)")
-    plt.ylabel("N")
+    plt.ylabel("Number of foci trajectories")
     if channel=="L":
         plt.title("Left channel diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
         ofile = params.seed_name+"_Lchannel_diff_coeff.png"
@@ -322,7 +349,7 @@ def get_diffusion_coef(traj_list, params, channel=None):
         plt.title("Right channel diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
         ofile = params.seed_name+"_Rchannel_diff_coeff.png"
     else:
-        plt.title("Whole frame diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
+        #plt.title("Whole frame diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
         ofile = params.seed_name+"_diff_coeff.png"
     plt.savefig(ofile, dpi=300)
     plt.show()
@@ -340,9 +367,11 @@ def get_diffusion_coef(traj_list, params, channel=None):
 def plot_traj_intensities(params, trajs, channel=None):
     for traj in trajs:
         t = traj.intensity
+        for i in range(len(t)):
+            t[i] /= 10**5
         plt.plot(t)
     plt.xlabel("Frame number")
-    plt.ylabel("Intensity (a.u.)")
+    plt.ylabel("Intensity (camera counts per pixel x$10^5$)")
     if channel=="L":
         plt.title("Left channel trajectory intensity")
         ofile = params.seed_name+"_Lchannel_trajectory_intensities.png"
@@ -350,7 +379,7 @@ def plot_traj_intensities(params, trajs, channel=None):
         plt.title("Right channel trajectory intensity")
         ofile = params.seed_name+"_Rchannel_trajectory_intensities.png"
     else:
-        plt.title("Whole frame trajectory intensity")
+        #plt.title("Whole frame trajectory intensity")
         ofile = params.seed_name+"_trajectory_intensities.png"
     plt.savefig(ofile, dpi=300)
     plt.show()
@@ -361,12 +390,10 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
     stoics = []
     startframe = 100000
     for traj in trajs:
-        if traj.start_frame<startframe and traj.length>=params.num_stoic_frames: startfram=traj.start_frame
+        if traj.start_frame<startframe and traj.length>=params.num_stoic_frames: startframe=traj.start_frame
+        print(startframe)
     for traj in trajs:
-        if traj.length == 1:
-            continue
-        if stepwise_sim and traj.start_frame!=0: 
-            print(traj.start_frame)
+        if traj.length <params.num_stoic_frames:
             continue
         if params.stoic_method == "initial":
             # Initial intensity
@@ -377,33 +404,29 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
                 np.mean(traj.intensity[: params.num_stoic_frames]) / isingle
                 )
         elif params.stoic_method == "linear_fit":
-            if traj.length < params.num_stoic_frames:
-                continue
-                    # xdata = (
-                    #     np.arange(1, traj.length, dtype="float") * params.frameTime
-                    # )
-                    # ydata = traj.intensity[1: traj.length]
-                    # popt, pcov = curve_fit(straightline, xdata, ydata)
+            if traj.start_frame-startframe>4:
+                continue #stoics.append(traj.intensity[0] / isingle)
             else:
                 xdata = (
                     np.arange(0, params.num_stoic_frames , dtype="float")
-                    #* params.frameTime
+                    # * params.frameTime
                 )
                 ydata = traj.intensity[0: params.num_stoic_frames]
                 popt, pcov = curve_fit(straightline, xdata, ydata)
                 intercept = popt[1]
-                if intercept > 0: # and popt[0]<0:
-                    #traj.stoichiometry = (intercept + abs((traj.start_frame-startframe)*popt[0])) / isingle
-                    traj.stoichiometry = intercept/isingle
+                if intercept > 0 and popt[0]<0 and startframe!=100000:
+                    traj.stoichiometry = (intercept + abs((traj.start_frame-startframe)*popt[0])) / isingle
+                    # traj.stoichiometry = intercept/isingle
                 else:
-                    traj.stoichiometry = traj.intensity[0] / isingle
+                    continue 
+                    # traj.stoichiometry = traj.intensity[0] / isingle
                 stoics.append(traj.stoichiometry)
     stoics = np.array(stoics)
-    # max_stoic = int(np.amax(np.round(stoics)))
-    # plt.hist(np.round(stoics), bins=np.arange(0, np.amax(np.round(stoics)+1), 1))
-    # plt.xticks(range(0,max_stoic+1))
-    # plt.xlabel("Rounded stoichiometry")
-    # plt.ylabel("N")
+    max_stoic = int(np.amax(np.round(stoics)))
+    plt.hist(np.round(stoics), bins=np.arange(0, np.amax(np.round(stoics)+1), 1))
+    plt.xticks(range(0,max_stoic+1))
+    plt.xlabel("Rounded stoichiometry")
+    plt.ylabel("N")
     if channel=="L":
         plt.title("Left channel stoichiometry")
         oseed = params.seed_name+"_Lchannel_stoichiometry"
@@ -413,22 +436,22 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
     else:
         plt.title("Whole frame stoichiometry")
         oseed = params.seed_name+"_stoichiometry"
-    # plt.savefig(oseed+"_histogram.png", dpi=300)
-    # plt.show()
-    # plt.scatter(range(len(stoics)), stoics)
-    # plt.xlabel("Spot #")
-    # plt.ylabel("Raw stoichiometry")
-    # if channel=="L":
-    #     plt.title("Left channel stoichiometry")
-    #     oseed = params.seedname+"_Lchannel_stoichiometry"
-    # elif channel=="R":
-    #     plt.title("Right channel stoichiometry")
-    #     oseed = params.seedname+"_Rchannel_stoichiometry"
-    # else:
-    #     plt.title("Whole frame stoichiometry")
-    #     oseed = params.seed_name+"_stoichiometry"
-    # plt.savefig(oseed+"_scatter.png", dpi=300)
-    # plt.show()
+    plt.savefig(oseed+"_histogram.png", dpi=300)
+    plt.show()
+    plt.scatter(range(len(stoics)), stoics)
+    plt.xlabel("Spot #")
+    plt.ylabel("Raw stoichiometry")
+    if channel=="L":
+        plt.title("Left channel stoichiometry")
+        oseed = params.seedname+"_Lchannel_stoichiometry"
+    elif channel=="R":
+        plt.title("Right channel stoichiometry")
+        oseed = params.seedname+"_Rchannel_stoichiometry"
+    else:
+        plt.title("Whole frame stoichiometry")
+        oseed = params.seed_name+"_stoichiometry"
+    plt.savefig(oseed+"_scatter.png", dpi=300)
+    plt.show()
     f = open(oseed + "_data.tsv", "w")
     for i in range(len(stoics)):
         f.write(str(float(stoics[i]))+"\n")

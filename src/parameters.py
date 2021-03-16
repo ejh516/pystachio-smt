@@ -87,7 +87,8 @@ class Parameters:
         self.gauss_mask_max_iter = 1000
 
         self.stoic_method = "linear_fit"
-        self.num_stoic_frames = 3
+        self.num_stoic_frames = 4
+        self.colocalize_n_frames = 5
         
         self.ALEX=False
         self.start_channel='L'

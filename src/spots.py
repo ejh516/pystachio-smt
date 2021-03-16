@@ -157,9 +157,9 @@ class Spots:
             
             # Filter spots too close to the edge to give good numbers
             if self.positions[i,0] < params.subarray_halfwidth \
-              or self.positions[i,0] >= frame.frame_size[1] - params.subarray_halfwidth \
+              or self.positions[i,0] >= frame.frame_size[0] - params.subarray_halfwidth \
               or self.positions[i,1] < params.subarray_halfwidth \
-              or self.positions[i,1] >= frame.frame_size[0] - params.subarray_halfwidth:
+              or self.positions[i,1] >= frame.frame_size[1] - params.subarray_halfwidth:
                 continue
 
             positions.append(self.positions[i, :])
