@@ -40,7 +40,7 @@ class Parameters:
         self.determine_first_frames = (
             False  # Are there blank frames before the shutter opens?
         )
-        self.frame_avg_window = 5  # Number of frames to average over
+        self.frame_avg_window = 1  # Number of frames to average over
         self.sat_pixel_val = 10 ** 10  # Value representing saturated pixels
 
         self.task = ""
@@ -70,6 +70,7 @@ class Parameters:
         self.diffusionCoeff = 1.0 # um2/s
 
         self.max_spot_molecules = 10
+        self.num_spot_molecules = None
         self.nDiffPoints = 4  # number of MSD points to calculate diffusion const
         self.frameTime = 0.005  # seconds
         self.pixelSize = 0.120  # microns
@@ -86,7 +87,17 @@ class Parameters:
         self.gauss_mask_max_iter = 1000
 
         self.stoic_method = "linear_fit"
-        self.num_stoic_frames = 3
+        self.num_stoic_frames = 4
+        self.colocalize_n_frames = 5
+        
+        self.ALEX=False
+        self.start_channel='L'
+        self.colocalise=False
+        self.colocalise_distance = 5
+        self.overlap_thresh = 0.75
+        
+        self.calculate_isingle=True
+        self.copy_number=False
 
     def read(self, args):
         self.task = args[1]

@@ -104,21 +104,22 @@ def simulate(params):
     return image, real_trajs
 
 
-#
-#
-#    # Simulate image stack and save
-
-
 def simulate_stepwise_bleaching(params):
 
     # Make a spot array the same size as normal
     real_spots = [Spots(params.num_spots) for i in range(params.num_frames)]
-    n_mols = random.randint(1, params.max_spot_molecules, params.num_spots)
 
     # initialise the spot co-ords
     real_spots[0].positions[:, 0] = random.rand(params.num_spots) * params.frame_size[0]
     real_spots[0].positions[:, 1] = random.rand(params.num_spots) * params.frame_size[1]
-    real_spots[0].spot_intensity[:] = params.Isingle
+
+    if params.num_spot_molecules is not None:
+        n_mols = np.ones(params.num_spots, dtype='int')*int(params.num_spot_molecules)
+    else:
+        n_mols = random.randint(1, params.max_spot_molecules, params.num_spots)
+    gtruth = np.copy(n_mols)
+    print(gtruth)
+    real_spots[0].spot_intensity[:] = params.Isingle*n_mols
     real_spots[0].frame = 1
 
     # Simulate the image stack
@@ -164,4 +165,4 @@ def simulate_stepwise_bleaching(params):
         frame_data += np.where(bg_noise > 0, bg_noise.astype(np.uint16), 0)
         image[frame] = frame_data
 
-    return image
+    return image, gtruth
