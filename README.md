@@ -21,7 +21,9 @@ For example:
 ```{bash}
 $ smtpy track data/exp_data
 $ smtpy simulate,view data/sim_data num_spots=10
+$ smtpy app data/exp_data
 ```
+(Note: the `app` task is not yet fully functional)
 
 ## Overview
 PySTACHIO SMT can be used in two ways: A Web GUI for interactive use, or a
@@ -78,7 +80,7 @@ The complete list of tasks currently implemented is:
 - `track`: Track the spots in a given dataset and produce predicted trajectories for that dataset.
 - `postprocess`: Perform postprocessing on tracked trajectories
 - `view`: View the dataset using the `Matplotlib` library.
-- `app`: Launch the web application
+- `app`: Launch the web application at http://localhost:8050
 
 
 ## Contributing
