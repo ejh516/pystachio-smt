@@ -125,7 +125,7 @@ def colocalise(params, Ltrajs, Rtrajs):
             if id1[i] in Llinks:
                 indices = np.where(Llinks==id1)
                 for index in indices:
-                    if Rlinks[index]==id2[j]
+                    if Rlinks[index]==id2[j]:
                         nlinks[index] += 1
                         found = True
             if found == False:
