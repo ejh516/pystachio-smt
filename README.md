@@ -14,14 +14,14 @@ intensity & trajectory analysis.
 
 ## Synopsis
 ```{bash}
-$ smtpy <task> <seed name> [<parameter>=<value>...]
+$ pystachio <task> <seed name> [<parameter>=<value>...]
 ```
 
 For example:
 ```{bash}
-$ smtpy track data/exp_data
-$ smtpy simulate,view data/sim_data num_spots=10
-$ smtpy app data/exp_data
+$ pystachio track data/exp_data
+$ pystachio simulate,view data/sim_data num_spots=10
+$ pystachio app data/exp_data
 ```
 (Note: the `app` task is not yet fully functional)
 
@@ -55,20 +55,20 @@ Installation of these can be performed as such:
 $ pip install -r requirements.txt
 ```
 
-After that, just make sure `smtpy` is in your `$PATH` somewhere, or just refer
-to it directly using `/path/to/smtpy ...`.
+After that, just make sure `pystachio` is in your `$PATH` somewhere, or just refer
+to it directly using `/path/to/pystachio ...`.
 
 ## Usage
 
 For the terminal UI, the command can be run as follows:
 ```{bash}
-$ smtpy <tasks> <seedname> [parameters]
+$ pystachio <tasks> <seedname> [parameters]
 ```
 
 Here, `<seedname>` is used for telling the program which file(s) to read from
 and write to; and `<tasks>` is a comma-separated list of the tasks you want to
 be performed.  For example, if you want to track spots in a dataset and then
-view the result, this can be done with `smtpy track,view ...`. 
+view the result, this can be done with `pystachio track,view ...`. 
 
 For a given `<seedname>`, the files currently recognised are:
 - `seedname.tif`: An input dataset saved as a multi-frame TIFF,
