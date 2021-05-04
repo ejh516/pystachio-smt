@@ -75,22 +75,20 @@ class ImageData:
 
     def read(self, params):
         # Determine the filename from the seedname
-        if os.path.isfile(params.seed_name):
-            filename = params.seed_name
-        elif os.path.isfile(params.seed_name + ".tif"):
-            filename = params.seed_name + ".tif"
+        if os.path.isfile(params.name):
+            filename = params.name
+        elif os.path.isfile(params.name + ".tif"):
+            filename = params.name + ".tif"
         else:
-            sys.exit(f"Unable to find file matching '{params.seed_name}'")
+            sys.exit(f"Unable to find file matching '{params.name}'")
 
         # Read in the file and get the data size
         pixel_data = tifffile.imread(filename)
 
-        if params.use_mask:
-            mask_file = params.seed_name + "_mask.tif"
-            if os.path.isfile(mask_file):
-                print(f"Using mask {mask_file}")
-                filename = params.seed_name
-                pixel_mask = tifffile.imread(mask_file)
+        if params.cell_mask:
+            if os.path.isfile(params.cell_mask):
+                print(f"Using mask params.cell_mask")
+                pixel_mask = tifffile.imread(params.cell_mask)
                 pixel_mask = np.where(pixel_mask > 0, 1, 0)
                 self.has_mask = True
                 self.mask_data = pixel_mask
@@ -102,8 +100,10 @@ class ImageData:
         else:
             self.num_frames = pixel_data.shape[0]
 
-        if params.split_frame:
+        if params.channel_split == "Vertical":
             self.frame_size = (pixel_data.shape[2]//2, pixel_data.shape[1])
+        if params.channel_split == "Horizontal":
+            self.frame_size = (pixel_data.shape[2], pixel_data.shape[1]//2)
         else:
             self.frame_size = (pixel_data.shape[2], pixel_data.shape[1])
 
@@ -116,11 +116,11 @@ class ImageData:
 
         self.exists = True
 
-    def write(self, params):
+    def write(self, filename):
         # Create the data array
         img_data = self.as_image(drop_dim=False)
 
-        tifffile.imsave(params.seed_name + ".tif", img_data)
+        tifffile.imsave(filename, img_data)
 
     def rotate(self, angle):
         if angle % 90 == 0:

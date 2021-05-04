@@ -106,14 +106,8 @@ def build_trajectories(all_spots, params):
     return filtered_trajectories
 
 
-def write_trajectories(trajectories, params, simulated=False, channel=None):
-    if simulated:
-        f = open(params.seed_name + "_simulated_trajectories.tsv", "w")
-    else:
-        if channel is not None:
-            f = open(params.seed_name + "_"+channel+"channel_trajectories.tsv", "w")
-        else:
-            f = open(params.seed_name + "_trajectories.tsv", "w")
+def write_trajectories(trajectories, filename, simulated=False, channel=None):
+    f = open(filename, "w")
     f.write(f"trajectory\tframe\tx\ty\tspot_intensity\tbg_intensity\tSNR\tconverged\twidthx\twidthy\n")
     for traj in trajectories:
         for frame in range(traj.start_frame, traj.end_frame + 1):

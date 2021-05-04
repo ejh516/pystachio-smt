@@ -42,6 +42,12 @@ def main():
         if task == "app":
             app.launch_app(params)
 
+        elif task == "help":
+            if (len(sys.argv) > 2):
+                params.help(sys.argv[2])
+            else:
+                params.help()
+
         elif task == "track":
             tracking.track(params)
 

@@ -23,86 +23,339 @@ Version: 0.2.0
 """
 
 import sys
+from difflib import SequenceMatcher
+
+default_parameters = {
+    # Runtime parameters
+    'num_procs':
+        { 'description': 'The number of CPU processes to run with',
+          'level': 'basic',
+          'class': 'general',
+          'default': 1 },
+    'tasks':
+        { 'description': 'Which task(s) to perform in the run',
+          'level': 'basic',
+          'class': 'general',
+          'default': [],
+          'options': ['simulate', 'track', 'postprocess', 'view', 'app'] },
+    'name':
+        { 'description': 'Name prefixing all files associated with this run',
+          'level': 'basic',
+          'class': 'general',
+          'default': '' },
+    'mask_file':
+        { 'description': 'Filename of an image mask for filtering spots',
+          'level': 'basic',
+          'class': 'general',
+          'default':  ''},
+
+    # Image parameters
+    'num_frames':
+        { 'description': 'Number of frames to simulate',
+          'level': 'basic',
+          'class': 'image',
+          'default': 10 },
+    'frame_size':
+        { 'description': 'Size of frame to simulate ([x,y])',
+          'level': 'basic',
+          'class': 'image',
+          'default': [100,100] },
+    'frame_time':
+        { 'description': 'Time per frame in seconds',
+          'level': 'advanced',
+          'class': 'image',
+          'default': 0.005 },
+    'pixel_size':
+        { 'description': 'Length of a single pixel in μm',
+          'level': 'advanced',
+          'class': 'image',
+          'default': 0.120 },
+    'start_frame':
+        { 'description': 'The first frame of the image stack to analyse',
+          'level': 'basic',
+          'class': 'image',
+          'default':  0},
+    'end_frame':
+        { 'description': 'The last frame of the image stack to analyse (-1 = use all frames)',
+          'level': 'basic',
+          'class': 'image',
+          'default':  -1},
+    'channel_split':
+        { 'description': 'If/how the frames are split spatially',
+          'level': 'basic',
+          'class': 'image',
+          'default': 'None',
+          'options': ['None', 'Vertical', 'Horizontal'] },
+    'cell_mask':
+        { 'description': 'Name of a black/white TIF file containing a cell mask',
+          'level': 'advanced',
+          'class': 'image',
+          'default': ''},
+
+    # Simulation parameters
+    'num_spots':
+        { 'description': 'Number of spots to simulate',
+          'level': 'basic',
+          'class': 'simulation',
+          'default': 10 },
+    'I_single':
+        { 'description': 'I_single value for simulated spots',
+          'level': 'basic',
+          'class': 'simulation',
+          'default': 10000.0 },
+    'bg_mean':
+        { 'description': 'Mean of the background pixlel intensity',
+          'level': 'advanced',
+          'class': 'simulation',
+          'default': 500.0 },
+    'bg_std':
+        { 'description': 'Standard deviation of the background pixel intensity',
+          'level': 'advanced',
+          'class': 'simulation',
+          'default': 120.0 },
+    'diffusion_coeff':
+        { 'description': 'Diffusion coefficient of the diffusing spots',
+          'level': 'basic',
+          'class': 'simulation',
+          'default': 1.0 },
+    'spot_width':
+        { 'description': 'Width of the simulated Gaussian spot',
+          'level': 'advanced',
+          'class': 'simulation',
+          'default':  1.33},
+    'max_spot_molecules':
+        { 'description': 'Maximum number of dye molecules per spot',
+          'level': 'advanced',
+          'class': 'simulation',
+          'default': 1 },
+    'p_bleach_per_frame':
+        { 'description': 'Probability of a spot bleaching in a given frame',
+          'level': 'advanced',
+          'class': 'simulation',
+          'default': 0.0 },
+    'photobleach':
+        { 'description': 'Perform photobleaching (alias for max_spot_molecules=10, p_bleach_per_frame=0.05)',
+          'level': 'basic',
+          'class': 'simulation',
+          'default': False },
+
+    # Tracking parameters
+    'bw_threshold_tolerance':
+        { 'description': 'Threshold for generating the b/w image relative to the peak intensity',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 1.0 },
+    'snr_filter_cutoff':
+        { 'description': 'Cutoff value when filtering spots by signal/noise ratio',
+          'level': 'basic',
+          'class': 'tracking',
+          'default': 0.4 },
+    'filter_image':
+        { 'description': 'Method for filtering the input image pre-analysis',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 'Gaussian',
+          'options': ['Gaussian', 'None']},
+    'max_displacement':
+        { 'description': 'Maximum displacement allowed for spots between frames',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 5.0 },
+    'struct_disk_radius':
+        { 'description': 'Radius of the Disk structural element',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 5 },
+    'struct_disk_radius':
+        { 'description': 'Radius of the Disk structural element',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 5 },
+    'min_traj_len':
+        { 'description': 'Minimum number of frames needed to define a trajectory',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 3 },
+    'spot_halfwidth':
+        { 'description': 'Halfwidth of the sub-image for analysing individual spots',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 8 },
+    'gauss_mask_sigma':
+        { 'description': 'Width of the Gaussian used for the iterative centre refinement',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 2.0 },
+    'gauss_mask_max_iter':
+        { 'description': 'Max number of iterations for the iterative centre refinement',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 1000 },
+    'inner_mask_radius':
+        { 'description': 'Radius of the mask used for calculating spot intensities',
+          'level': 'advanced',
+          'class': 'tracking',
+          'default': 5 },
+
+    # Postprocessing parameters
+    'msd_num_points':
+        { 'description': 'Number of points used to calculate the mean-squared displacement',
+          'level': 'basic',
+          'class': 'postprocessing',
+          'default': 4 },
+    'stoic_method':
+        { 'description': 'Method used for determining the stoichiometry of each trajectory',
+          'level': 'advanced',
+          'class': 'postprocessing',
+          'default': 'Linear',
+          'options': ['Linear', 'Mean', 'Initial'] },
+    'num_stoic_frames': {
+          'level': 'advanced',
+          'class': 'postprocessing',
+          'description': 'Number of frames used to determine the stoichiometry',
+          'default': 3 },
+}
 
 
 class Parameters:
     def __init__(self):
-        self.num_procs = 0
-        self.verbose = True  # Whether or not to display verbose console output
-        self.c_split = "None"  # How the channels are split
-        self.frames_to_track = (
-            0  # How many frames to track after the laser has switched on
-        )
-        self.start_channel = 0  # First channel to use
-        self.end_channel = 0  # Last channel to use
-        self.ALEX = 0  # Whether or not this is an ALEX experiment
-        self.use_cursor = False  # Whether or not to use the cursor
-        self.determine_first_frames = (
-            False  # Are there blank frames before the shutter opens?
-        )
-        self.frame_avg_window = 1  # Number of frames to average over
-        self.sat_pixel_val = 10 ** 10  # Value representing saturated pixels
+        self._params = default_parameters
 
-        self.task = ""
-        self.verbose = True
-        self.render_image = False
-        self.use_mask = False
-        self.seed_name = ""
+        for param in self._params.keys():
+            # Set all the values to be the default values
+            self._params[param]['value'] = self._params[param]['default']
 
-        # Spots.find_in_frame
-        self.filter_image = "gaussian"
-        self.disk_radius = 5
-        self.bw_threshold_tolerance = 1.0
-        self.snr_filter_cutoff = 0.4
+#EJH#         self.num_procs = 0
+#EJH#         self.verbose = True  # Whether or not to display verbose console output
+#EJH#         self.c_split = "None"  # How the channels are split
+#EJH#         self.frames_to_track = (
+#EJH#             0  # How many frames to track after the laser has switched on
+#EJH#         )
+#EJH#         self.start_channel = 0  # First channel to use
+#EJH#         self.end_channel = 0  # Last channel to use
+#EJH#         self.ALEX = 0  # Whether or not this is an ALEX experiment
+#EJH#         self.use_cursor = False  # Whether or not to use the cursor
+#EJH#         self.determine_first_frames = (
+#EJH#             False  # Are there blank frames before the shutter opens?
+#EJH#         )
+#EJH#         self.frame_avg_window = 1  # Number of frames to average over
+#EJH#         self.sat_pixel_val = 10 ** 10  # Value representing saturated pixels
+#EJH# 
+#EJH#         self.task = ""
+#EJH#         self.verbose = True
+#EJH#         self.render_image = False
+#EJH#         self.use_mask = False
+#EJH#         self.seed_name = ""
+#EJH# 
+#EJH#         # Spots.find_in_frame
+#EJH#         self.filter_image = "gaussian"
+#EJH#         self.disk_radius = 5
+#EJH#         self.bw_threshold_tolerance = 1.0
+#EJH#         self.snr_filter_cutoff = 0.4
+#EJH# 
+#EJH#         self.max_displacement = 5.0
+#EJH#         # Initialise
+#EJH#         self.num_spots = 10
+#EJH#         self.Isingle = 10000.0
+#EJH#         self.BGmean = 500.0  # mean background pixel intensity
+#EJH#         self.BGstd = 120.0  # standard deviation of background pixels
+#EJH#         self.num_frames = 100
+#EJH#         self.split_frame = False
+#EJH#         self.frame_size = [64, 64]
+#EJH# 
+#EJH#         self.min_traj_len = 3
+#EJH#         self.bleach_time = 0 # in frames, if 0 then no bleaching
+#EJH#         self.diffusionCoeff = 1.0 # um2/s
+#EJH# 
+#EJH#         self.max_spot_molecules = 10
+#EJH#         self.num_spot_molecules = None
+#EJH#         self.nDiffPoints = 4  # number of MSD points to calculate diffusion const
+#EJH#         self.frameTime = 0.005  # seconds
+#EJH#         self.pixelSize = 0.120  # microns
+#EJH#         self.PSFwidth = (
+#EJH#             0.160 / self.pixelSize
+#EJH#         )  # Sigma of a Gaussian, ~2/3 airy disk diameter
+#EJH#         self.MSD_num_points = 4
+#EJH# 
+#EJH#         self.p_bleach_per_frame = 0.05
+#EJH# 
+#EJH#         self.subarray_halfwidth = 8
+#EJH#         self.inner_mask_radius = 5
+#EJH#         self.gauss_mask_sigma = 2.
+#EJH#         self.gauss_mask_max_iter = 1000
+#EJH# 
+#EJH#         self.stoic_method = "linear_fit"
+#EJH#         self.num_stoic_frames = 4
+#EJH#         self.colocalize_n_frames = 5
+#EJH#         
+#EJH#         self.ALEX=False
+#EJH#         self.start_channel='L'
+#EJH#         self.colocalise=False
+#EJH#         self.colocalise_distance = 5
+#EJH#         self.overlap_thresh = 0.75
+#EJH#         
+#EJH#         self.calculate_isingle=True
+#EJH#         self.copy_number=False
 
-        self.max_displacement = 5.0
-        # Initialise
-        self.num_spots = 10
-        self.Isingle = 10000.0
-        self.BGmean = 500.0  # mean background pixel intensity
-        self.BGstd = 120.0  # standard deviation of background pixels
-        self.num_frames = 100
-        self.split_frame = False
-        self.frame_size = [64, 64]
+    def __getattr__(self, name):
+        if name.startswith("_"):
+            return object.__getattribute__(self, name)
+        else:
+            try:
+                return object.__getattribute__(self, "_params")[name]['value']
+            except KeyError as exc:
+                max_param = ''
+                max_val  = 0
+                for key in self._params:
+                    if SequenceMatcher(None, name, key).ratio() > max_val:
+                        max_param = key
+                        max_val = SequenceMatcher(None, name, key).ratio()
+                print(f"\nNo such key {name}. Did you mean {max_param}?\n")
+                raise  exc
 
-        self.min_traj_len = 3
-        self.bleach_time = 0 # in frames, if 0 then no bleaching
-        self.diffusionCoeff = 1.0 # um2/s
+    def __setattribute__(self, name, value):
+        if name.startswith("_"):
+            object.__setattr__(self, name, value)
+        else:
+            self._params[name]['value'] = value
 
-        self.max_spot_molecules = 10
-        self.num_spot_molecules = None
-        self.nDiffPoints = 4  # number of MSD points to calculate diffusion const
-        self.frameTime = 0.005  # seconds
-        self.pixelSize = 0.120  # microns
-        self.PSFwidth = (
-            0.160 / self.pixelSize
-        )  # Sigma of a Gaussian, ~2/3 airy disk diameter
-        self.MSD_num_points = 4
+    def help(self, name=None, param_class=None, level='basic'):
+        names = []
+        if name:
+            names.append(name)
+        elif param_class:
+            for key in self._params:
+                if level != 'advanced':
+                    if (self._params[key]['class'] == param_class
+                      and self._params[key]['level'] == 'basic'):
+                        names.append(key)
+                else:
+                    names.append(key)
+        elif level != 'basic':
+            for key in self._params:
+                names.append(key)
+        else:
+            for key in self._params:
+                if self._params[key]['level'] == 'basic':
+                    names.append(key)
 
-        self.p_bleach_per_frame = 0.05
 
-        self.subarray_halfwidth = 8
-        self.inner_mask_radius = 5
-        self.gauss_mask_sigma = 2.
-        self.gauss_mask_max_iter = 1000
+        for name in names:
+            print()
+            print(f"{name.upper()}")
+            print(f"  Description: {self._params[name]['description']}")
+            print(f"      Default: {self._params[name]['default']}")
+            print(f"        Class: {self._params[name]['class']}")
+            print(f"        Level: {self._params[name]['level']}")
 
-        self.stoic_method = "linear_fit"
-        self.num_stoic_frames = 4
-        self.colocalize_n_frames = 5
-        
-        self.ALEX=False
-        self.start_channel='L'
-        self.colocalise=False
-        self.colocalise_distance = 5
-        self.overlap_thresh = 0.75
-        
-        self.calculate_isingle=True
-        self.copy_number=False
+
 
     def read(self, args):
         self.task = args[1]
         self.task = self.task.split(",")
-        self.seed_name = args[2]
+        if self.task == ['help']:
+            return
+        self.name = args[2]
         for arg in args[3:]:
             key, value = arg.split("=", 2)
             try:
