@@ -70,6 +70,11 @@ default_parameters = {
           'level': 'advanced',
           'class': 'image',
           'default': 0.120 },
+    'psf_width':
+        { 'description': '?',
+          'level': 'advanced',
+          'class': 'image',
+          'default': 0.120 },
     'start_frame':
         { 'description': 'The first frame of the image stack to analyse',
           'level': 'basic',
@@ -91,6 +96,16 @@ default_parameters = {
           'level': 'advanced',
           'class': 'image',
           'default': ''},
+    'ALEX':
+        { 'description': 'Perform Alternating-Laser experiment analysis',
+          'level': 'basic',
+          'class': 'image',
+          'default': False},
+    'start_channel':
+        { 'description': '?',
+          'level': 'basic',
+          'class': 'image',
+          'default': 'L'},
 
     # Simulation parameters
     'num_spots':
@@ -166,11 +181,6 @@ default_parameters = {
           'level': 'advanced',
           'class': 'tracking',
           'default': 5 },
-    'struct_disk_radius':
-        { 'description': 'Radius of the Disk structural element',
-          'level': 'advanced',
-          'class': 'tracking',
-          'default': 5 },
     'min_traj_len':
         { 'description': 'Minimum number of frames needed to define a trajectory',
           'level': 'advanced',
@@ -214,6 +224,31 @@ default_parameters = {
           'class': 'postprocessing',
           'description': 'Number of frames used to determine the stoichiometry',
           'default': 3 },
+    'calculate_isingle': {
+          'level': 'advanced',
+          'class': 'postprocessing',
+          'description': 'Whether or not to calculate the ISingle',
+          'default': True },
+    'colocalize': {
+          'level': 'advanced',
+          'class': 'postprocessing',
+          'description': '?',
+          'default': False },
+    'colocalize_distance': {
+          'level': 'advanced',
+          'class': 'postprocessing',
+          'description': '?',
+          'default': 5 },
+    'colocalize_n_frames': {
+          'level': 'advanced',
+          'class': 'postprocessing',
+          'description': '?',
+          'default': 5 },
+    'copy_number': {
+          'level': 'advanced',
+          'class': 'postprocessing',
+          'description': '?',
+          'default': False },
 }
 
 
@@ -233,7 +268,6 @@ class Parameters:
 #EJH#         )
 #EJH#         self.start_channel = 0  # First channel to use
 #EJH#         self.end_channel = 0  # Last channel to use
-#EJH#         self.ALEX = 0  # Whether or not this is an ALEX experiment
 #EJH#         self.use_cursor = False  # Whether or not to use the cursor
 #EJH#         self.determine_first_frames = (
 #EJH#             False  # Are there blank frames before the shutter opens?
@@ -378,5 +412,5 @@ class Parameters:
             except NameError:
                 sys.exit(f"ERROR: No such parameter '{key}'")
 
-            if key == "pixelSize":
-                self.PSFwidth = 0.160 / self.pixelSize
+            if key == "pixel_size":
+                self.psf_width = 0.160 / self.pixelSize

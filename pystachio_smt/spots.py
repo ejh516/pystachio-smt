@@ -67,7 +67,7 @@ class Spots:
         img_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # Get structural element (map with disk of ones in a square of 0s) [strel]
-        disk_size = 2 * params.disk_radius - 1
+        disk_size = 2 * params.struct_disk_radius - 1
         disk_kernel = cv2.getStructuringElement(
             cv2.MORPH_ELLIPSE, (disk_size, disk_size)
         )
