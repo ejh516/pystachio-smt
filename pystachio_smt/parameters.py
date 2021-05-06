@@ -186,7 +186,7 @@ default_parameters = {
           'level': 'advanced',
           'class': 'tracking',
           'default': 3 },
-    'spot_halfwidth':
+    'subarray_halfwidth':
         { 'description': 'Halfwidth of the sub-image for analysing individual spots',
           'level': 'advanced',
           'class': 'tracking',

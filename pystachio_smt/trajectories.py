@@ -106,7 +106,7 @@ def build_trajectories(all_spots, params):
     return filtered_trajectories
 
 
-def write_trajectories(trajectories, filename, simulated=False, channel=None):
+def write_trajectories(trajectories, filename):
     f = open(filename, "w")
     f.write(f"trajectory\tframe\tx\ty\tspot_intensity\tbg_intensity\tSNR\tconverged\twidthx\twidthy\n")
     for traj in trajectories:
@@ -195,8 +195,8 @@ def compare_trajectories(params):
     all_target_spots = []
     all_spots = []
 
-    trajs = read_trajectories(params.seed_name + "_trajectories.tsv")
-    target_trajs = read_trajectories(params.seed_name + "_simulated_trajectories.tsv")
+    trajs = read_trajectories(params.name + "_trajectories.tsv")
+    target_trajs = read_trajectories(params.name + "_simulated.tsv")
 
     frame = 0
     done_all_frames = False
