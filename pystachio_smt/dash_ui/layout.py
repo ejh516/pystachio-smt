@@ -60,7 +60,7 @@ def build_render_selection():
     )
 
 def build_render_image(params):
-    filename = html.Label(params.seed_name, id='render-image-name')
+    filename = html.Label(params.name, id='render-image-name')
     graph = dcc.Graph(id='render-image-graph')
     frame_number = html.Label('Frame 0', id='render-image-frame')
     slider = dcc.Slider(id='render-image-slider', min=0, max=params.num_frames, value=0)
@@ -140,7 +140,7 @@ def build_simulation_tab(params):
                 id='simulation-isingle',
                 type='number',
                 debounce=True,
-                placeholder=params.Isingle,
+                placeholder=params.I_single,
             ),
             html.Br(),
             html.Label('Diffusion coefficient: '),
@@ -149,7 +149,7 @@ def build_simulation_tab(params):
                 id='simulation-diffusion-coeff',
                 type='number',
                 debounce=True,
-                placeholder=params.diffusionCoeff,
+                placeholder=params.diffusion_coeff,
             ),
             html.Br(),
             html.Br(),
