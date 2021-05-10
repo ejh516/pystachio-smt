@@ -64,7 +64,6 @@ def track(params):
         for frame in range(image_data.num_frames):
             all_spots.append(track_frame(image_data[frame], frame, params))
         trajs = trajectories.build_trajectories(all_spots, params)
-            Rtrajs = trajectories.read_trajectories(params.name +)
         trajectories.write_trajectories(trajs, params.name +  "_Rchannel_trajectories.tsv")
 
     # For each frame, detect spots
