@@ -27,7 +27,8 @@ from trajectories import read_trajectories
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LITERA])
 
 def launch_app(params):
-    app.title = "SMT-Python"
+    app.title = "PySTACHIO"
+    print("Loading pystachio")
     app.layout = dash_ui.layout.build_layout(params)
     app.run_server(debug=False)
 
@@ -39,10 +40,10 @@ def launch_app(params):
         Input('render-image-name','children'))
 def update_slider(render_selection, vis_frame, seedname):
     params = Parameters()
-    params.seed_name = seedname
-    print(f"Opening {params.seed_name}")
+    params.name = seedname
+    print(f"Opening {params.name}")
     image_data = images.ImageData()
-    image_data.read(params)
+    image_data.read(params.name + ".tif", params)
     fig = px.imshow(
         image_data.pixel_data[vis_frame,:,:],
         color_continuous_scale='gray',

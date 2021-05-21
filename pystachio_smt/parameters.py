@@ -414,3 +414,18 @@ class Parameters:
 
             if key == "pixel_size":
                 self.psf_width = 0.160 / self.pixelSize
+
+    def param_dict(self, param_class=''):
+        param_dict = {}
+
+        
+        if param_class:
+            for k,v in self._params.items():
+                if v["class"] == param_class:
+                    param_dict[k] = v
+        else:
+            param_dict = self._params
+
+        return param_dict
+
+

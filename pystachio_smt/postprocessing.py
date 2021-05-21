@@ -96,7 +96,7 @@ def postprocess(params, simulated=False, stepwise=False):
 
 def colocalize(params, Ltrajs, Rtrajs):
     image_data = images.ImageData()
-    image_data.read(params)
+    image_data.read(params.name + '.tif', params)
     imageL=np.zeros((image_data.num_frames//2,image_data.frame_size[1],image_data.frame_size[0]//2))
     imageR=np.zeros((image_data.num_frames//2,image_data.frame_size[1],image_data.frame_size[0]//2))
     if params.start_channel=='L':

@@ -19,7 +19,7 @@ import trajectories
 
 def render(params):
     image_data = images.ImageData()
-    image_data.read(params)
+    image_data.read(params.name+".tif", params)
     trajs = trajectories.read_trajectories(params.name + "_trajectories.tsv")
     true_trajs = trajectories.read_trajectories(params.name + "_simulated.tsv")
 

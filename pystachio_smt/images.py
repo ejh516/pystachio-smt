@@ -73,14 +73,10 @@ class ImageData:
             img = self.pixel_data.astype(np.uint16)
         return img
 
-    def read(self, params):
+    def read(self, filename, params):
         # Determine the filename from the seedname
-        if os.path.isfile(params.name):
-            filename = params.name
-        elif os.path.isfile(params.name + ".tif"):
-            filename = params.name + ".tif"
-        else:
-            sys.exit(f"Unable to find file matching '{params.name}'")
+        if not os.path.isfile(filename):
+            sys.exit(f"Unable to find file matching '{filename}'")
 
         # Read in the file and get the data size
         pixel_data = tifffile.imread(filename)

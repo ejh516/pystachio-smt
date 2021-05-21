@@ -28,6 +28,7 @@ render_options = [
 ]
 
 def build_layout(params):
+    print("LAYING OUT PAGE")
     layout["header-bar"] = build_header_bar()
     layout["left-pane"] = build_left_pane(params)
     layout["right-pane"] = build_right_pane(params)
@@ -40,7 +41,7 @@ def build_layout(params):
     ])
 
 def build_header_bar():
-    return html.Div([html.H1("Single Molecule Tools")])
+    return html.Div([html.H1("PySTACHIO")])
 
 def build_left_pane(params):
     layout["render-selection"] = build_render_selection()
@@ -65,23 +66,24 @@ def build_render_image(params):
     frame_number = html.Label('Frame 0', id='render-image-frame')
     slider = dcc.Slider(id='render-image-slider', min=0, max=params.num_frames, value=0)
 
-    return html.Div(["File = ", filename, graph, html.Br(),frame_number, slider])
+    return html.Div(["File = ", filename, graph, html.Br(), slider, frame_number])
 
 def build_right_pane(params):
     layout["task-tabs"] = build_task_tabs(params)
     return html.Div([layout["task-tabs"]])
 
 def build_task_tabs(params):
+    layout["files-tab"] = build_files_tab(params)
+    layout["tracking-tab"] = build_tracking_tab(params)
     layout["simulation-tab"] = build_simulation_tab(params)
-    layout["tracking-tab"] = build_tracking_tab()
     layout["postprocessing-tab"] = build_postprocessing_tab()
     return dcc.Tabs(
         id='task-tabs',
         children=[
             dcc.Tab(
-                label='Simulation',
-                value='simulation-tab',
-                children=layout["simulation-tab"] ),
+                label='Files',
+                value='files-tab',
+                children=layout["files-tab"] ),
 
             dcc.Tab(
                 label='Tracking',
@@ -89,80 +91,117 @@ def build_task_tabs(params):
                 children=layout["tracking-tab"] ),
 
             dcc.Tab(
+                label='Simulation',
+                value='simulation-tab',
+                children=layout["simulation-tab"] ),
+
+            dcc.Tab(
                 label='Postprocessing',
                 value='postprocessing-tab',
                 children=layout["postprocessing-tab"] ),
         ],
-        value='simulation-tab'
+        value='files-tab'
     )
+
+def build_files_tab(params):
+    return html.Div(
+    [
+        html.H1("File Browser"),
+        html.H2("Upload"),
+        dcc.Upload(
+            id="upload-data",
+            children=html.Div(
+                ["Upload TIF File"]
+            ),
+            style={
+                "width": "80%",
+                "height": "60px",
+                "lineHeight": "60px",
+                "borderWidth": "1px",
+                "borderStyle": "dashed",
+                "borderRadius": "5px",
+                "textAlign": "center",
+                "margin": "10px",
+            },
+            multiple=True,
+        ),
+        html.H2("File List"),
+        html.Ul(id="file-list"),
+    ])
+
+def build_tracking_tab(params):
+    tracking_params = params.param_dict('tracking')
+    table = []
+    for param in tracking_params.keys():
+        label, input_box = get_param_input(param, tracking_params[param], 'tracking')
+        cols = [dbc.Col(label), dbc.Col(input_box)]
+        table.append(dbc.Row(cols, no_gutters=True))
+    table.append(dbc.Row([html.Br()]))
+    table.append(dbc.Row(html.Button('Track', id='tracking-task-run', n_clicks=0)))
+
+    return html.Div(table, id="tracking-tab")
 
 def build_simulation_tab(params):
-    return html.Div([
-            html.H2('Simulation paramters'),
-            html.Label('Frame size'),
-            html.Br(),
-            dcc.Input(
-                id='simulation-frame-size-x',
-                type='number',
-                debounce=True,
-                placeholder=params.frame_size[0],
-            ),
-            html.Label('x'),
-            dcc.Input(
-                id='simulation-frame-size-y',
-                type='number',
-                debounce=True,
-                placeholder=params.frame_size[1],
-            ),
-            html.Br(),
-            html.Label('Number of frames: '),
-            html.Br(),
-            dcc.Input(
-                id='simulation-num-frames',
-                type='number',
-                debounce=True,
-                placeholder=params.num_frames,
-            ),
-            html.Br(),
-            html.Br(),
-            html.Label('Number of spots: '),
-            html.Br(),
-            dcc.Input(
-                id='simulation-num-spots',
-                type='number',
-                debounce=True,
-                placeholder=params.num_spots,
-            ),
-            html.Br(),
-            html.Label('Isingle value: '),
-            html.Br(),
-            dcc.Input(
-                id='simulation-isingle',
-                type='number',
-                debounce=True,
-                placeholder=params.I_single,
-            ),
-            html.Br(),
-            html.Label('Diffusion coefficient: '),
-            html.Br(),
-            dcc.Input(
-                id='simulation-diffusion-coeff',
-                type='number',
-                debounce=True,
-                placeholder=params.diffusion_coeff,
-            ),
-            html.Br(),
-            html.Br(),
-            html.Button('Simulate', id='simulation-start', n_clicks=0),
-        ],
-        id="simulation-tab",
-    )
+    simulation_params = params.param_dict('simulation')
+    table = []
+    for param in simulation_params.keys():
+        label, input_box = get_param_input(param, simulation_params[param], 'simulation')
+        cols = [dbc.Col(label), dbc.Col(input_box)]
+        table.append(dbc.Row(cols, no_gutters=True))
+    table.append(dbc.Row([html.Br()]))
+    table.append(dbc.Row(html.Button('Track', id='simulation-task-run', n_clicks=0)))
 
-def build_tracking_tab():
-    return html.Div([html.P("Tracking tab not yet built")],
-        id="tracking-tab")
+    return html.Div(table, id="simulation-tab")
 
 def build_postprocessing_tab():
     return html.Div([html.P("Postprocessing tab not yet built")],
             id="postprocessing-tab")
 
+def get_param_input(name, param, param_class):
+    param_type =  type(param["default"])
+    label = html.Label(name),
+    input_box = None
+    if param_type is int or param_type is float:
+        input_box = dcc.Input(
+            id = param_class + "-" + name,
+            type='number',
+            debounce=True,
+            placeholder=param['value'],
+            style={'width':'100%'},
+        )
+    if param_type is str:
+        if 'options' in param.keys():
+            input_box = dcc.Dropdown(
+                id = param_class + "-" + name,
+                options = list(map( lambda x:{'label': x, 'value': x}, param["options"])),
+                value = param["options"][0],
+                clearable = False,
+            )
+        else:
+            input_box = dcc.Input(
+                id = param_class + "-" + name,
+                type='text',
+                debounce=True,
+                placeholder=param['value'],
+                size = '100%',
+            )
+    elif param_type is bool:
+        input_box = dcc.RadioItems(
+            id = param_class + "-" + name,
+            options = [
+                {'label': 'True', 'value': 'True'},
+                {'label': 'False', 'value': 'False'},
+            ],
+            value = str(param["value"]),
+#EJH#             labelStyle={'display': 'inline-block'},
+        )
+
+    elif param_type is list:
+        input_box = dcc.Dropdown(
+            id = param_class + "-" + name,
+            options = param["options"],
+            value = param["options"][0],
+            clearable = False
+        )
+
+    return label, input_box
