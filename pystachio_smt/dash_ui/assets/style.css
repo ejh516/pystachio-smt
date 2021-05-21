@@ -1,0 +1,125 @@
+/*
+ * style.css
+ * Copyright (C) 2021 Edward Higgins
+ *
+ * Distributed under terms of the MIT license.
+ */
+
+:root {
+  --main-radius:5px;
+  --main-padding:5px;
+  --navbar-fg: #93c572;
+  --navbar-bg: #000;
+  --sidebar-bg: #0081af;
+  --sidebar-fg: #ffffff;
+  --graphs-pane-bg: ;
+  --graphs-pane-fg: ;
+  --img-pane-bg: ;
+  --img-pane-fg: ;
+}
+
+
+body {
+  border: 0px;
+  padding: 0px;
+  margin: auto;
+  align: center;
+  font-family: 'Montserrat', sans-serif;
+}
+
+#dash_app {
+  display: grid;
+  border: 0px;
+  padding: 0.5rem;
+  height: 100%;
+  width: 95%;
+  align: center;
+  margin: auto;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 64px 520px 1.0fr 64px;
+  grid-template-areas:
+    "nav nav nav nav"
+    "img img img sidebar"
+    "graphs graphs graphs sidebar"
+    "footer footer footer footer";
+    grid-gap: 0.2rem;
+}
+
+#navbar {
+  grid-area: nav;
+  background: var(--navbar-bg);
+  color: var(--navbar-fg);
+  border-radius: var(--main-radius);
+  padding: var(--main-padding);
+}
+#navbar h1 {
+    align: top;
+    margin: 0px;
+}
+
+#img_pane {
+  grid-area: img;
+  background: var(--img-pane-bg);
+  color: var(--img-pane-fg);
+  align: auto;
+  border-radius: var(--main-radius);
+  padding: var(--main-padding);
+}
+
+#sidebar {
+  grid-area: sidebar;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-fg);
+  border-radius: var(--main-radius);
+  padding: var(--main-padding);
+}
+#sidebar tr {
+  border: 20px;
+  text-align: left;
+}
+
+#graphs_pane {
+  grid-area: graphs;
+  background: #cbe0e9;
+  color: #000;
+  border-radius: var(--main-radius);
+  padding: var(--main-padding);
+}
+
+.graph {
+  margin: 10px;
+  width: 600px;
+  height: 400px;
+  display: inline-block;
+  border: 3px solid black;
+}
+
+footer {
+  grid-area: footer;
+  background-color: #a3c5cf;
+  text-align: center;
+  font-size: 12px;
+  padding: 15px;
+  color: #000;
+  border-radius: var(--main-radius);
+  padding: var(--main-padding);
+}
+
+@media only screen and (max-width: 1100px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-rows: 64px 520px 300px 1.0fr 64px;
+    grid-template-areas:
+      "nav"
+      "simulation"
+      "sidebar"
+      "graphs"
+      "footer";
+  }
+}
+
+body {
+	background: white;
+	color: black;
+}
+

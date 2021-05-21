@@ -30,17 +30,17 @@ import simulation
 import tracking
 import trajectories
 import visualisation
-import dash_ui.app as app
+import dash_ui.launcher
 
 def main():
     params = parameters.Parameters()
-    params.read(sys.argv)
+    params.read(sys.argv[1:])
     stepwise = False
     sim=False
     
     for task in params.task:
         if task == "app":
-            app.launch_app(params)
+            dash_ui.launcher.launch_app(params)
 
         elif task == "help":
             if (len(sys.argv) > 2):

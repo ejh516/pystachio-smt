@@ -385,12 +385,14 @@ class Parameters:
 
 
     def read(self, args):
-        self.task = args[1]
+        self.task = args.pop(0)
         self.task = self.task.split(",")
         if self.task == ['help']:
             return
-        self.name = args[2]
-        for arg in args[3:]:
+        elif self.task != ['app']:
+            self.name = args.pop(0)
+
+        for arg in args:
             key, value = arg.split("=", 2)
             try:
                 # use isinstance

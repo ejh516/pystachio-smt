@@ -6,6 +6,14 @@
 #
 # Distributed under terms of the MIT license.
 
-import dash
-app = dash.Dash(__name__)
+"""
 
+"""
+import dash_html_components as html
+
+def layout():
+    sidebar = html.Div(id="sidebar",
+        children=[
+            html.H1("Sidebar"), ])
+
+    return sidebar
