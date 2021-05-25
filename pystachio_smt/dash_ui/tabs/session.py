@@ -20,7 +20,7 @@ from datetime import datetime
 
 from dash_ui.app import app
 
-full_data_folder=os.getcwd() + '/web_data'
+full_data_folder=os.path.join(os.getcwd(),'web_data')
 data_folder='/web_data'
 
 def layout(params):
