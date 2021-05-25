@@ -47,7 +47,7 @@ def layout(params):
             },
             multiple=False,
         ),
-        html.A('Download file', id='file-download-button', download="true"),
+        html.A('Download file', id='file-download-button', download=True),
         html.Br(),
         dcc.Store(id='session-id-store', data='default'),
         dcc.Store(id='session-files-update-upload-store'),
