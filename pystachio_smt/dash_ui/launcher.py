@@ -26,5 +26,5 @@ def launch_app(params):
                 dash_ui.footer.layout()
                 ])
 
-    app.run_server(debug=True)
+    app.run_server(debug=False)
 

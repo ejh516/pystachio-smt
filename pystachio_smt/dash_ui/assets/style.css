@@ -11,7 +11,7 @@
   --navbar-fg: #93c572;
   --navbar-bg: #000;
   --sidebar-bg: #0081af;
-  --sidebar-fg: #ffffff;
+  --sidebar-fg: #000;
   --graphs-pane-bg: ;
   --graphs-pane-fg: ;
   --img-pane-bg: ;
@@ -36,7 +36,7 @@ body {
   align: center;
   margin: auto;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 64px 520px 1.0fr 64px;
+  grid-template-rows: 64px 700px 1.0fr 64px;
   grid-template-areas:
     "nav nav nav nav"
     "img img img sidebar"
@@ -64,6 +64,10 @@ body {
   align: auto;
   border-radius: var(--main-radius);
   padding: var(--main-padding);
+  height: 100%;
+}
+#image-graph {
+    height: 600px;
 }
 
 #sidebar {
@@ -94,7 +98,7 @@ body {
   border: 3px solid black;
 }
 
-footer {
+#footer {
   grid-area: footer;
   background-color: #a3c5cf;
   text-align: center;

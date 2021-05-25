@@ -35,7 +35,7 @@ def layout(params):
         children=[
             selection,
             html.Label(params.name, id='image-name'),
-            dcc.Graph(id='image-graph'),
+            dcc.Graph(id='image-graph', className='img-graph'),
             html.Label('Frame 0', id='image-frame'),
             dcc.Slider(id='image-slider', min=0, max=params.num_frames, value=0),
         ])
