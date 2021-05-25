@@ -36,7 +36,8 @@ def layout(params):
 
 @app.callback([
         Output('tracking-task-loading-output', 'children'), 
-        Output('image-slider', 'value')],
+        Output('image-slider', 'value'),
+        Output('session-files-update-track-store', 'data')],
     [
         Input('tracking-task-run', 'n_clicks'), ],
     [
@@ -52,7 +53,7 @@ def run_tracking_task(nclicks, active_file, params_json):
 
     tracking.track(params)
 
-    return [value, 1]
+    return ["", 1, True]
 
 def get_param_input(name, param, param_class):
     param_type =  type(param["default"])

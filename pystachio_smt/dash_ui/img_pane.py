@@ -40,7 +40,7 @@ def layout(params):
             selection,
             dcc.Graph(id='image-graph', className='img-graph'),
             html.Label('Frame 0', id='image-frame'),
-            dcc.Slider(id='image-slider', min=0, max=params.num_frames, value=0),
+            dcc.Slider(id='image-slider', min=1, max=params.num_frames, value=0),
         ])
 
     return img_pane
@@ -48,6 +48,7 @@ def layout(params):
 @app.callback(
         Output('image-graph', 'figure'),
         Output('image-frame', 'children'),
+        Output('image-slider', 'max'),
         Input('image-selection','value'),
         Input('image-slider','value'),
         Input('session-active-file-store', 'data'))
@@ -58,10 +59,10 @@ def update_slider(render_selection, vis_frame, active_file):
     image_data = images.ImageData()
     image_data.read(active_file, params)
     fig = px.imshow(
-        image_data.pixel_data[vis_frame,:,:],
+        image_data.pixel_data[vis_frame-1,:,:],
         color_continuous_scale='gray',
         zmin = 0,
-        zmax = np.max(image_data[vis_frame].pixel_data)
+        zmax = np.max(image_data[vis_frame-1].pixel_data)
     )
     if (render_selection == "render-all-trajectories" or
         render_selection == "render-current-trajectories"):
@@ -82,5 +83,6 @@ def update_slider(render_selection, vis_frame, active_file):
             fig.update_layout(showlegend=False)
 
 
+    print(f"Setting slider max to {image_data.num_frames}")
     label = f"Frame {vis_frame}"
-    return fig, label
+    return fig, label, image_data.num_frames

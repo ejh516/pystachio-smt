@@ -50,7 +50,8 @@ def layout(params):
         html.A('Download file', id='file-download-button', download="true"),
         html.Br(),
         dcc.Store(id='session-id-store', data='default'),
-        dcc.Store(id='session-files-update-store'),
+        dcc.Store(id='session-files-update-upload-store'),
+        dcc.Store(id='session-files-update-track-store'),
         dcc.Store(id='session-parameters-store', data=str(json.dumps(params._params))),
         dcc.Store(id='session-active-file-store'),
     ])
@@ -58,9 +59,12 @@ def layout(params):
 @app.callback([
     Output('files-dropdown', 'options'),
     Output('files-dropdown', 'value')],
-    [Input('session-id-store',
-    'data'), Input('session-files-update-store', 'data')])
-def update_file_options(session_id, update_time):
+    [
+        Input('session-id-store', 'data'),
+        Input('session-files-update-upload-store', 'data'),
+        Input('session-files-update-track-store', 'data'),
+        ])
+def update_file_options(session_id, update_upload, update_track):
     absolute_filename = os.path.join(full_data_folder, session_id)
     print(f"Updating options {absolute_filename}")
     options = [{'label': f, 'value': f} for f in os.listdir(absolute_filename)]
@@ -82,7 +86,7 @@ def set_file_download(dropdown_value, session_id):
     return filename
 
 @app.callback([
-        Output('session-files-update-store', 'data'),
+        Output('session-files-update-upload-store', 'data'),
         Output('session-active-file-store', 'data')
     ], [
         Input("data-file-upload", "filename"),
