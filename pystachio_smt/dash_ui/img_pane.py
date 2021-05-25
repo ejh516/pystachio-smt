@@ -12,9 +12,13 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 
 from dash_ui.app import app
 from parameters import Parameters
+from trajectories import read_trajectories
 import images
 
 render_options = [
@@ -34,7 +38,6 @@ def layout(params):
     img_pane = html.Div(id="img_pane",
         children=[
             selection,
-            html.Label(params.name, id='image-name'),
             dcc.Graph(id='image-graph', className='img-graph'),
             html.Label('Frame 0', id='image-frame'),
             dcc.Slider(id='image-slider', min=0, max=params.num_frames, value=0),
@@ -47,13 +50,13 @@ def layout(params):
         Output('image-frame', 'children'),
         Input('image-selection','value'),
         Input('image-slider','value'),
-        Input('image-name','children'))
-def update_slider(render_selection, vis_frame, seedname):
+        Input('session-active-file-store', 'data'))
+def update_slider(render_selection, vis_frame, active_file):
     params = Parameters()
-    params.name = seedname
-    print(f"Opening {params.name}")
+    params.name = active_file.replace('.tif','')
+    print(f"Opening {active_file}")
     image_data = images.ImageData()
-    image_data.read(params.name + ".tif", params)
+    image_data.read(active_file, params)
     fig = px.imshow(
         image_data.pixel_data[vis_frame,:,:],
         color_continuous_scale='gray',
@@ -62,7 +65,8 @@ def update_slider(render_selection, vis_frame, seedname):
     )
     if (render_selection == "render-all-trajectories" or
         render_selection == "render-current-trajectories"):
-        trajs = read_trajectories(seedname + "_trajectories.tsv")
+        print(f"Using trajectories {params.name + '_trajectories.tsv'}")
+        trajs = read_trajectories(params.name + "_trajectories.tsv")
         colors = px.colors.qualitative.Plotly
         for traj in trajs:
             if (render_selection == "render-current-trajectories" and

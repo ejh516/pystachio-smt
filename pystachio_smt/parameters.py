@@ -253,8 +253,8 @@ default_parameters = {
 
 
 class Parameters:
-    def __init__(self):
-        self._params = default_parameters
+    def __init__(self, initial=default_parameters):
+        self._params = initial
 
         for param in self._params.keys():
             # Set all the values to be the default values

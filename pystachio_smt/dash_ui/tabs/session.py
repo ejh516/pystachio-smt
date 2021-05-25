@@ -11,6 +11,7 @@
 """
 import os
 import base64
+import json
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input,Output
@@ -19,10 +20,10 @@ from datetime import datetime
 
 from dash_ui.app import app
 
-full_data_folder=os.getcwd() + '/data'
-data_folder='/data'
+full_data_folder=os.getcwd() + '/web_data'
+data_folder='/web_data'
 
-def layout():
+def layout(params):
     return html.Div(id='session-tab-container', children=[
         html.Button('New Session', id='new-session-button', n_clicks=0),
         html.H3("Files"),
@@ -46,10 +47,11 @@ def layout():
             },
             multiple=False,
         ),
-        html.A('Download file', id='file-download-button', download=True),
+        html.A('Download file', id='file-download-button', download="true"),
         html.Br(),
         dcc.Store(id='session-id-store', data='default'),
-        dcc.Store(id='files-update-store'),
+        dcc.Store(id='session-files-update-store'),
+        dcc.Store(id='session-parameters-store', data=str(json.dumps(params._params))),
         dcc.Store(id='session-active-file-store'),
     ])
 
@@ -57,7 +59,7 @@ def layout():
     Output('files-dropdown', 'options'),
     Output('files-dropdown', 'value')],
     [Input('session-id-store',
-    'data'), Input('files-update-store', 'data')])
+    'data'), Input('session-files-update-store', 'data')])
 def update_file_options(session_id, update_time):
     absolute_filename = os.path.join(full_data_folder, session_id)
     print(f"Updating options {absolute_filename}")
@@ -80,14 +82,15 @@ def set_file_download(dropdown_value, session_id):
     return filename
 
 @app.callback([
-        Output('files-update-store', 'data'),
+        Output('session-files-update-store', 'data'),
         Output('session-active-file-store', 'data')
     ], [
         Input("data-file-upload", "filename"),
         Input("data-file-upload", "contents"),
+        Input('session-active-file-store', 'data'),
         Input("session-id-store", "data"),
     ])
-def upload_file(filename, file_contents, session_id):
+def upload_file(filename, file_contents, active_file, session_id):
     print("Called")
     full_filename=""
     if filename:
@@ -102,9 +105,12 @@ def upload_file(filename, file_contents, session_id):
     else:
         file_path=""
 
+    if ".tif" in full_filename:
+        active_file = full_filename
+
     now = datetime.now()
     time = now.strftime("%Y-%m-%dT%H:%M:%S.%f")
-    return [time, full_filename]
+    return [time, active_file]
 
 @app.callback(
         [

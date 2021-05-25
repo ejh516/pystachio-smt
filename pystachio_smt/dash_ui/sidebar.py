@@ -16,13 +16,12 @@ from dash.dependencies import Input,Output
 from dash_ui.app import app
 import dash_ui.tabs
 
-def layout():
+def layout(params):
     sidebar = html.Div(id="sidebar",
         children=[
-            html.H2("Controls"), 
             dcc.Tabs(id='control-tabs', value='session-tab', children=[
-                dcc.Tab(id='session-tab', value='session-tab', label='Session', children=dash_ui.tabs.session.layout()),
-                dcc.Tab(id='tracking-tab', value='tracking-tab', label='Trackingk', children=dash_ui.tabs.tracking.layout()),
+                dcc.Tab(id='session-tab', value='session-tab', label='Session', children=dash_ui.tabs.session.layout(params)),
+                dcc.Tab(id='tracking-tab', value='tracking-tab', label='Tracking', children=dash_ui.tabs.tracking.layout(params)),
 #EJH#                 simulation_tab(),
 #EJH#                 postprocessing_tab(),
             ]),

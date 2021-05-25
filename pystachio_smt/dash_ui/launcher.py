@@ -21,10 +21,10 @@ def launch_app(params):
             children=[
                 dash_ui.navbar.layout(),
                 dash_ui.img_pane.layout(params),
-                dash_ui.sidebar.layout(),
+                dash_ui.sidebar.layout(params),
                 dash_ui.graphs_pane.layout(),
                 dash_ui.footer.layout()
                 ])
 
-    app.run_server(debug=False)
+    app.run_server(debug=True)
 
