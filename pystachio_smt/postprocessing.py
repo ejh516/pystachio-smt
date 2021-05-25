@@ -13,6 +13,7 @@ from scipy.stats import gaussian_kde
 from scipy.spatial import distance_matrix
 import os
 import trajectories, images
+import cv2
 
 def postprocess(params, simulated=False, stepwise=False):
     if not params.ALEX:
@@ -48,6 +49,8 @@ def postprocess(params, simulated=False, stepwise=False):
         plot_traj_intensities(params, trajs)
         get_stoichiometries(trajs, calculated_isingle, params, stepwise_sim=stepwise)
         if params.copy_number==True: get_copy_number(params, calculated_isingle)
+        
+        overtrack(params, trajs)
 
     elif params.ALEX:
         if params.colocalise==True:
@@ -56,44 +59,85 @@ def postprocess(params, simulated=False, stepwise=False):
             Rspots = trajectories.to_spots(Rtrajs)
             Lspots = trajectories.to_spots(Ltrajs)
 
-            # Rintensities= np.array([])
-            # Rsnrs = np.array([])
-            # Rintensities= np.array([])
-            # Rsnrs = np.array([])
-            # Lintensities= np.array([])
-            # Lsnrs = np.array([])
-            # Lintensities= np.array([])
-            # Lsnrs = np.array([])         
-            # for i in range(len(Rspots)):
-            #     Rintensities = np.concatenate((Rintensities,Rspots[i].spot_intensity))
-            #     Rsnrs = np.concatenate((Rsnrs,Rspots[i].snr))
-            # for i in range(len(Lspots)):
-            #     Lintensities = np.concatenate((Lintensities,Lspots[i].spot_intensity))
-            #     Lsnrs = np.concatenate((Lsnrs,Lspots[i].snr))            
-            # if params.calculate_isingle:
-            #     R_isingle = get_isingle(params,Rintensities, channel="R")
-            #     L_isingle = get_isingle(params,Lintensities, channel="L")
-            # else:
-            #     R_isingle = params.R_isingle
-            #     L_isingle = params.L_isingle
+            Rintensities= np.array([])
+            Rsnrs = np.array([])
+            Rintensities= np.array([])
+            Rsnrs = np.array([])
+            Lintensities= np.array([])
+            Lsnrs = np.array([])
+            Lintensities= np.array([])
+            Lsnrs = np.array([])         
+            for i in range(len(Rspots)):
+                Rintensities = np.concatenate((Rintensities,Rspots[i].spot_intensity))
+                Rsnrs = np.concatenate((Rsnrs,Rspots[i].snr))
+            for i in range(len(Lspots)):
+                Lintensities = np.concatenate((Lintensities,Lspots[i].spot_intensity))
+                Lsnrs = np.concatenate((Lsnrs,Lspots[i].snr))            
+            if params.calculate_isingle:
+                R_isingle = get_isingle(params,Rintensities, channel="R")
+                L_isingle = get_isingle(params,Lintensities, channel="L")
+            else:
+                R_isingle = params.R_isingle
+                L_isingle = params.L_isingle
 
-            # L_calculated_snr = plot_snr(params,Lsnrs, channel="L")
-            # R_calculated_snr = plot_snr(params,Rsnrs, channel="R")
-            # Ldc, Llp = get_diffusion_coef(Ltrajs, params, channel="L")
-            # Rdc, Rlp = get_diffusion_coef(Rtrajs, params, channel="R")
-            # plot_traj_intensities(params, Ltrajs, channel="L")
-            # plot_traj_intensities(params, Rtrajs, channel="R")
-            # get_stoichiometries(Ltrajs, L_isingle, params, stepwise_sim=stepwise, channel="L")
-            # get_stoichiometries(Rtrajs, R_isingle, params, stepwise_sim=stepwise, channel="R")
+            L_calculated_snr = plot_snr(params,Lsnrs, channel="L")
+            R_calculated_snr = plot_snr(params,Rsnrs, channel="R")
+            Ldc, Llp = get_diffusion_coef(Ltrajs, params, channel="L")
+            Rdc, Rlp = get_diffusion_coef(Rtrajs, params, channel="R")
+            plot_traj_intensities(params, Ltrajs, channel="L")
+            plot_traj_intensities(params, Rtrajs, channel="R")
+            get_stoichiometries(Ltrajs, L_isingle, params, stepwise_sim=stepwise, channel="L")
+            get_stoichiometries(Rtrajs, R_isingle, params, stepwise_sim=stepwise, channel="R")
             
-            # if params.copy_number==True: 
-            #     get_copy_number(params, Lcalculated_isingle, channel="L")
-            #     get_copy_number(params, Rcalculated_isingle, channel="R")
+            if params.copy_number==True: 
+                get_copy_number(params, Lcalculated_isingle, channel="L")
+                get_copy_number(params, Rcalculated_isingle, channel="R")
 
             if params.colocalise: colocalise(params, Ltrajs, Rtrajs)
 
     else: sys.exit("ERROR: look do you want ALEX or not?\nSet params.ALEX=True or False")
 
+def overtrack(params, trajs):
+    image_data = images.ImageData()
+    image_data.read(params)
+    outfile = params.seed_name+"_overtracked_trajectory_intensities.tsv"
+    f = open(outfile, 'w')
+    f.write("Trajectory ID\tFrame\tIntensity\n")
+    for traj in trajs:
+        ints = traj.intensity
+        final_position = traj.path[-1]
+        x = round(final_position[0])
+        y = round(final_position[1])
+        final_frame = traj.end_frame
+        for frame in range(final_frame+1,final_frame+11):
+            image = image_data.pixel_data[frame,:,:]
+            # Create a tmp array with the centre of the spot in the centre
+            tmp = image[
+                y - params.subarray_halfwidth : y + params.subarray_halfwidth+1, 
+                x - params.subarray_halfwidth : x + params.subarray_halfwidth + 1
+            ] 
+            spotmask = np.zeros(tmp.shape)
+            cv2.circle(spotmask, 
+                    (params.subarray_halfwidth, params.subarray_halfwidth),
+                    params.inner_mask_radius,
+                    1,
+                    -1
+            )
+            bgintensity = np.mean(tmp[spotmask == 0])
+            tmp = tmp - bgintensity
+            intensity = np.sum(tmp[spotmask == 1])
+            ints.append(intensity/10**5)
+        # for i in range(len(ints)):
+        #     outstr = str(traj.id) + "\t" + str(traj.start_frame+i) + "\t" + str(ints[i]) + "\n"
+        #     f.write(outstr)
+        plt.plot(ints, lw=1, label="Trajectory "+str(traj.id))
+    plt.title("Overtracked trajectories")
+    plt.xlabel("Trajectory frame number")
+    plt.ylabel("Intensity (a.u.)")
+    # plt.legend()
+    plt.savefig(params.seed_name+"overtracked_trajectory_intensities_plot.png", dpi=300)
+            
+    
 def colocalise(params, Ltrajs, Rtrajs):
     image_data = images.ImageData()
     image_data.read(params)
@@ -284,7 +328,7 @@ def get_isingle(params, intensities, channel=None):
         plt.title("Right hand channel intensities plot\nIsingle = %i"%(np.round(peak)))
         outseed = params.seed_name + "Rchannel_intensity"
     else:
-        #plt.title("Whole frame intensities\nIsingle = %i"%(np.round(peak)))
+        plt.title("Whole frame intensities\nIsingle = %i"%(np.round(peak)))
         outseed = params.seed_name + "_intensity"
     lns = l2+l3
     labs = [l.get_label() for l in lns]
@@ -349,7 +393,7 @@ def get_diffusion_coef(traj_list, params, channel=None):
         plt.title("Right channel diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
         ofile = params.seed_name+"_Rchannel_diff_coeff.png"
     else:
-        #plt.title("Whole frame diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
+        plt.title("Whole frame diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
         ofile = params.seed_name+"_diff_coeff.png"
     plt.savefig(ofile, dpi=300)
     plt.show()
@@ -379,7 +423,7 @@ def plot_traj_intensities(params, trajs, channel=None):
         plt.title("Right channel trajectory intensity")
         ofile = params.seed_name+"_Rchannel_trajectory_intensities.png"
     else:
-        #plt.title("Whole frame trajectory intensity")
+        # plt.title("Whole frame trajectory intensity")
         ofile = params.seed_name+"_trajectory_intensities.png"
     plt.savefig(ofile, dpi=300)
     plt.show()
