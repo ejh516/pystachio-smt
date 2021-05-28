@@ -22,8 +22,7 @@ def layout(params):
             dcc.Tabs(id='control-tabs', value='session-tab', children=[
                 dcc.Tab(id='session-tab', value='session-tab', label='Session', children=dash_ui.tabs.session.layout(params)),
                 dcc.Tab(id='tracking-tab', value='tracking-tab', label='Tracking', children=dash_ui.tabs.tracking.layout(params)),
-#EJH#                 simulation_tab(),
-#EJH#                 postprocessing_tab(),
+                dcc.Tab(id='postprocessing-tab', value='postprocesing-tab', label='Analysis', children=dash_ui.tabs.postprocessing.layout(params)),
             ]),
         ]
     )

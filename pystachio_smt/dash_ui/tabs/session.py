@@ -14,7 +14,7 @@ import base64
 import json
 import dash_html_components as html
 import dash_core_components as dcc
-from dash.dependencies import Input,Output
+from dash.dependencies import Input,Output,State
 
 from datetime import datetime
 
@@ -47,11 +47,14 @@ def layout(params):
             },
             multiple=False,
         ),
-        html.A('Download file', id='file-download-button', download=True),
-        html.Br(),
+        html.Div([
+            html.Button("Download file", id="file-download-button"),
+            dcc.Download(id="file-download")
+            ]),
         dcc.Store(id='session-id-store', data='default'),
         dcc.Store(id='session-files-update-upload-store'),
         dcc.Store(id='session-files-update-track-store'),
+        dcc.Store(id='session-files-update-postprocess-store'),
         dcc.Store(id='session-parameters-store', data=str(json.dumps(params._params))),
         dcc.Store(id='session-active-file-store'),
     ])
@@ -63,27 +66,37 @@ def layout(params):
         Input('session-id-store', 'data'),
         Input('session-files-update-upload-store', 'data'),
         Input('session-files-update-track-store', 'data'),
+        Input('session-files-update-postprocess-store', 'data'),
         ])
-def update_file_options(session_id, update_upload, update_track):
+def update_file_options(session_id, update_upload, update_track, update_post):
     absolute_filename = os.path.join(full_data_folder, session_id)
     print(f"Updating options {absolute_filename}")
     options = [{'label': f, 'value': f} for f in os.listdir(absolute_filename)]
-    print(options)
+    first_element = ""
+    if options:
+        first_element = options[0]["value"]
 
-    return options, options[0]["value"]
+    return options, first_element
 
-@app.callback(Output('file-download-button', 'href'),
-              [Input('files-dropdown', 'value'),
-               Input('session-id-store','data')])
-def set_file_download(dropdown_value, session_id):
-    button_style = {'color': '#000000'}
-    filename=''
-    filename = os.path.join(data_folder, session_id, dropdown_value)
-    print(f"Setting {filename} for download")
-    if (dropdown_value):
-        filename = os.path.join(data_folder, session_id, dropdown_value)
-        print(f"Setting {filename} for download")
-    return filename
+@app.callback(Output('file-download', 'data'),
+              Input('file-download-button', 'n_clicks'),
+              State('files-dropdown', 'value'),
+              State('session-id-store', 'data'),
+             )
+def download_file(n_clicks,filename, session_path):
+    return dcc.send_file(os.path.join(full_data_folder, session_path, filename))
+#EJH# @app.callback(Output('file-download-link', 'href'),
+#EJH#               [Input('files-dropdown', 'value'),
+#EJH#                Input('session-id-store','data')])
+#EJH# def set_file_download(dropdown_value, session_id):
+#EJH#     button_style = {'color': '#000000'}
+#EJH#     filename=''
+#EJH#     filename = os.path.join(data_folder, session_id, dropdown_value)
+#EJH#     print(f"Setting {filename} for download")
+#EJH#     if (dropdown_value):
+#EJH#         filename = os.path.join(data_folder, session_id, dropdown_value)
+#EJH#         print(f"Setting {filename} for download")
+#EJH#     return filename
 
 @app.callback([
         Output('session-files-update-upload-store', 'data'),
@@ -91,8 +104,8 @@ def set_file_download(dropdown_value, session_id):
     ], [
         Input("data-file-upload", "filename"),
         Input("data-file-upload", "contents"),
-        Input('session-active-file-store', 'data'),
-        Input("session-id-store", "data"),
+        State('session-active-file-store', 'data'),
+        State("session-id-store", "data"),
     ])
 def upload_file(filename, file_contents, active_file, session_id):
     print("Called")

@@ -14,6 +14,6 @@ import dash_html_components as html
 def layout():
     graphs_pane = html.Div(id="graphs_pane",
         children=[
-            html.H1("Graphs pane"), ])
+            html.H2("Graphs"), ])
 
     return graphs_pane
