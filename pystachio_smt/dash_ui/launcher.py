@@ -11,20 +11,22 @@ import dash_html_components as html
 from dash_ui.app import app
 import dash_ui.navbar
 import dash_ui.img_pane
-import dash_ui.graphs_pane
+import dash_ui.info_pane
 import dash_ui.sidebar
 import dash_ui.footer
 
 def launch_app(params):
     app.title = "PySTACHIO"
-    app.layout = html.Div(id='dash_app',
+    app.layout = html.Div(id='dash-app',
             children=[
                 dash_ui.navbar.layout(),
+                    dash_ui.sidebar.layout(params),
+                html.Div(id='main-content', children=[
                 dash_ui.img_pane.layout(params),
-                dash_ui.sidebar.layout(params),
-                dash_ui.graphs_pane.layout(),
+                    dash_ui.info_pane.layout(),
+                ]),
                 dash_ui.footer.layout()
                 ])
 
-    app.run_server(debug=False)
+    app.run_server(debug=True)
 

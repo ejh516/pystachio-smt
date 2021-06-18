@@ -10,5 +10,6 @@
 
 """
 import dash_ui.tabs.session
+import dash_ui.tabs.images
 import dash_ui.tabs.tracking
 import dash_ui.tabs.postprocessing
