@@ -56,43 +56,92 @@ def postprocess(params, simulated=False, stepwise=False):
             Rspots = trajectories.to_spots(Rtrajs)
             Lspots = trajectories.to_spots(Ltrajs)
 
-            # Rintensities= np.array([])
-            # Rsnrs = np.array([])
-            # Rintensities= np.array([])
-            # Rsnrs = np.array([])
-            # Lintensities= np.array([])
-            # Lsnrs = np.array([])
-            # Lintensities= np.array([])
-            # Lsnrs = np.array([])         
-            # for i in range(len(Rspots)):
-            #     Rintensities = np.concatenate((Rintensities,Rspots[i].spot_intensity))
-            #     Rsnrs = np.concatenate((Rsnrs,Rspots[i].snr))
-            # for i in range(len(Lspots)):
-            #     Lintensities = np.concatenate((Lintensities,Lspots[i].spot_intensity))
-            #     Lsnrs = np.concatenate((Lsnrs,Lspots[i].snr))            
-            # if params.calculate_isingle:
-            #     R_isingle = get_isingle(params,Rintensities, channel="R")
-            #     L_isingle = get_isingle(params,Lintensities, channel="L")
-            # else:
-            #     R_isingle = params.R_isingle
-            #     L_isingle = params.L_isingle
+            Rintensities= np.array([])
+            Rsnrs = np.array([])
+            Rintensities= np.array([])
+            Rsnrs = np.array([])
+            Lintensities= np.array([])
+            Lsnrs = np.array([])
+            Lintensities= np.array([])
+            Lsnrs = np.array([])         
+            for i in range(len(Rspots)):
+                Rintensities = np.concatenate((Rintensities,Rspots[i].spot_intensity))
+                Rsnrs = np.concatenate((Rsnrs,Rspots[i].snr))
+            for i in range(len(Lspots)):
+                Lintensities = np.concatenate((Lintensities,Lspots[i].spot_intensity))
+                Lsnrs = np.concatenate((Lsnrs,Lspots[i].snr))            
+            if params.calculate_isingle:
+                R_isingle = get_isingle(params,Rintensities, channel="R")
+                L_isingle = get_isingle(params,Lintensities, channel="L")
+            else:
+                R_isingle = params.R_isingle
+                L_isingle = params.L_isingle
 
-            # L_calculated_snr = plot_snr(params,Lsnrs, channel="L")
-            # R_calculated_snr = plot_snr(params,Rsnrs, channel="R")
-            # Ldc, Llp = get_diffusion_coef(Ltrajs, params, channel="L")
-            # Rdc, Rlp = get_diffusion_coef(Rtrajs, params, channel="R")
-            # plot_traj_intensities(params, Ltrajs, channel="L")
-            # plot_traj_intensities(params, Rtrajs, channel="R")
-            # get_stoichiometries(Ltrajs, L_isingle, params, stepwise_sim=stepwise, channel="L")
-            # get_stoichiometries(Rtrajs, R_isingle, params, stepwise_sim=stepwise, channel="R")
+            L_calculated_snr = plot_snr(params,Lsnrs, channel="L")
+            R_calculated_snr = plot_snr(params,Rsnrs, channel="R")
+            Ldc, Llp = get_diffusion_coef(Ltrajs, params, channel="L")
+            Rdc, Rlp = get_diffusion_coef(Rtrajs, params, channel="R")
+            plot_traj_intensities(params, Ltrajs, channel="L")
+            plot_traj_intensities(params, Rtrajs, channel="R")
+            get_stoichiometries(Ltrajs, L_isingle, params, stepwise_sim=stepwise, channel="L")
+            get_stoichiometries(Rtrajs, R_isingle, params, stepwise_sim=stepwise, channel="R")
             
-            # if params.copy_number==True: 
-            #     get_copy_number(params, Lcalculated_isingle, channel="L")
-            #     get_copy_number(params, Rcalculated_isingle, channel="R")
+            if params.copy_number==True: 
+                get_copy_number(params, Lcalculated_isingle, channel="L")
+                get_copy_number(params, Rcalculated_isingle, channel="R")
 
             if params.colocalize: colocalize(params, Ltrajs, Rtrajs)
 
     else: sys.exit("ERROR: look do you want ALEX or not?\nSet params.ALEX=True or False")
+
+def chung_kennedy(data, window, R): #God only knows
+    # Based on Adam Wollman's code, just translated
+    # Originally based on some old Fortran written in 2000
+    # A good Fortran programmer can write Fortran in any language....
+    # ... Even 21 years later!
+    N = len(data)
+    extended_data = np.zeros(N+2*window)
+    extended_data[window:-window]=data
+    for i in range(window):
+        extended_data[window-i-1] = data[i]
+        extended_data[N+window+i] = data[N-i]
+    N_extended = extended_data.shape[0]
+    wdiffx = np.zeros(N_extended)
+    datamx = []
+    datx = np.zeros((N+window+1,window))
+    for i in range(len(window)):
+        datamx[:,i] = extended_data[i:N+window+i]
+    wx = np.mean(datamx,axis=1)
+    sx = np.std(datamx,axis=1,ddof=1)
+    XP = wx[:N_extended]
+    XM = wx[window+1:N_extended+window+1]
+    SDP = sx[:N]
+    SDM = sx[window+1:N_extended+window+1]
+    DSD = SDP-SDM
+    
+    SP = SDP**2
+    SM = SM**2
+    
+    # Form switching functions (?)
+    RSP = SP**R
+    RSM = SM**R
+    GM = RSP/(RSP+RSM)
+    GP = RSM/(RSP+RSM)
+    
+    if GM>=0 and GM<=1 and GP>=0 and GP<=1:
+        S = GM*SM + GP*SP
+        XX = GP*XP + GM*XM
+    else:
+        S = SP
+        XX = XP
+        
+    SD = np.sqrt(S)
+    SE = np.sqrt(S/window)
+    
+    TX = (XP-XM)/(np.sqrt(2.)*SE);
+    DX = (XP-XM)
+    XPRE = XP
+    return [XX,TX,DX,SD,DSD,XPRE]
 
 def colocalize(params, Ltrajs, Rtrajs):
     image_data = images.ImageData()
@@ -258,9 +307,9 @@ def plot_snr(params,snr,channel=None):
 def get_isingle(params, intensities, channel=None):
     scale = 5
     intensities = intensities[intensities > 1]
-    bandwidth = 0.07
+    bandwidth = 0.7
     kde = gaussian_kde(intensities, bw_method=bandwidth)
-    x = np.linspace(0, np.amax(intensities), 10000)
+    x = np.linspace(0, np.amax(intensities), np.amax(intensities))
     pdf = kde.evaluate(x)
     peak = x[np.where(pdf == np.amax(pdf))].astype('int')
     peakval = np.amax(pdf)
@@ -423,10 +472,27 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
                 stoics.append(traj.stoichiometry)
     stoics = np.array(stoics)
     max_stoic = int(np.amax(np.round(stoics)))
-    plt.hist(np.round(stoics), bins=np.arange(0, np.amax(np.round(stoics)+1), 1))
+
+    bandwidth = 0.7
+    kde = gaussian_kde(stoics, bw_method=bandwidth)
+    x = np.linspace(0, np.amax(stoics), np.amax(stoics))
+    pdf = kde.evaluate(x)
+    
+    fig, ax1 = plt.subplots()
+    l1 = ax1.hist(
+        stoics,
+        bins=np.arange(0, np.amax(np.round(stoics)+1), 1),
+        color="gray"
+    )
+    ax2 = ax1.twinx()
+    l2 = ax2.plot(x, pdf, "k-", label="Gaussian KDE")
+    plt.ylabel("Probability density (a.u.)")
+    ax2.ticklabel_format(axis="y", style="sci", scilimits=(0, 2))
+
     plt.xticks(range(0,max_stoic+1))
     plt.xlabel("Rounded stoichiometry")
     plt.ylabel("N")
+    
     if channel=="L":
         plt.title("Left channel stoichiometry")
         oseed = params.name+"_Lchannel_stoichiometry"

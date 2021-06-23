@@ -38,9 +38,10 @@ def simulate(params):
     # Make a spot array the same size as normal
     real_spots = [Spots(params.num_spots) for i in range(params.num_frames)]
     if params.max_spot_molecules == 1:
-        n_mols = [1] * params.num_spots
+        n_mols = np.array([1] * params.num_spots)
     else:
-        n_mols = random.randint(1, params.max_spot_molecules, params.num_spots)
+        n_mols = np.array(random.randint(1, params.max_spot_molecules, params.num_spots))
+    n_mols_fractional_intensity = np.zeros(n_mols.shape)
 
     # initialise the spot co-ords
     real_spots[0].positions[:, 0] = random.rand(params.num_spots) * params.frame_size[0]
@@ -55,17 +56,21 @@ def simulate(params):
 
     for frame in range(1, params.num_frames):
         real_spots[frame].frame = frame
-        real_spots[frame].spot_intensity[:] = params.I_single * np.array(n_mols)
+        real_spots[frame].spot_intensity[:] = params.I_single * (n_mols+n_mols_fractional_intensity)
         real_spots[frame].traj_num = real_spots[frame - 1].traj_num[:]
         real_spots[frame].positions = random.normal(
             real_spots[frame - 1].positions, S, (params.num_spots, 2)
         )
 
         # Photobleah some spots
+        n_mols_fractional_intensities[:] = 0
         for i in range(params.num_spots):
             if n_mols[i] > 0:
                 for j in range(n_mols[i]):
                     if random.rand() < params.p_bleach_per_frame:
+                        #How far into next frame does this one last?
+                        frac = random.rand()
+                        n_mols_fractional_intensity += frac
                         n_mols[i] -= 1
 
     # Simulate the image stack and save
