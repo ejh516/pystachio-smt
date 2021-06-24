@@ -118,7 +118,6 @@ def chung_kennedy(data, window, R): #God only knows
     SDP = sx[:N]
     SDM = sx[window+1:N_extended+window+1]
     DSD = SDP-SDM
-    
     SP = SDP**2
     SM = SM**2
     
@@ -134,10 +133,8 @@ def chung_kennedy(data, window, R): #God only knows
     else:
         S = SP
         XX = XP
-        
     SD = np.sqrt(S)
     SE = np.sqrt(S/window)
-    
     TX = (XP-XM)/(np.sqrt(2.)*SE);
     DX = (XP-XM)
     XPRE = XP
