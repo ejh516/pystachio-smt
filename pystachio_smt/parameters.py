@@ -415,7 +415,7 @@ class Parameters:
                 sys.exit(f"ERROR: No such parameter '{key}'")
 
             if key == "pixel_size":
-                self.psf_width = 0.160 / self.pixelSize
+                self.psf_width = 0.160 / self.pixel_size
 
     def param_dict(self, param_class=''):
         param_dict = {}
