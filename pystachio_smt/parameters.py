@@ -208,6 +208,16 @@ default_parameters = {
           'default': 5 },
 
     # Postprocessing parameters
+    'chung_kennedy_window':
+        { 'description': 'Window width for Chung-Kennedy filtering',
+          'level': 'basic',
+          'class': 'postprocessing',
+          'default': 3},
+    'chung_kennedy':
+        { 'description': 'Flag to specify whether or not to Chung-Kennedy filter intensity tracks',
+          'level': 'basic',
+          'class': 'postprocessing',
+          'default': True},
     'msd_num_points':
         { 'description': 'Number of points used to calculate the mean-squared displacement',
           'level': 'basic',

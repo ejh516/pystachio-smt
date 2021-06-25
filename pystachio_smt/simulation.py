@@ -63,7 +63,7 @@ def simulate(params):
         )
 
         # Photobleah some spots
-        n_mols_fractional_intensities[:] = 0
+        n_mols_fractional_intensity[:] = 0
         for i in range(params.num_spots):
             if n_mols[i] > 0:
                 for j in range(n_mols[i]):

@@ -45,7 +45,7 @@ def postprocess(params, simulated=False, stepwise=False):
             print(f"Tracked diffusion coefficient: {np.mean(dc)}")
             #print(f"Tracked Isingle:               {calculated_isingle[0]}")
 
-        plot_traj_intensities(params, trajs)
+        plot_traj_intensities(params, trajs, params.chung_kennedy)
         get_stoichiometries(trajs, calculated_isingle, params, stepwise_sim=stepwise)
         if params.copy_number==True: get_copy_number(params, calculated_isingle)
 
@@ -94,7 +94,7 @@ def postprocess(params, simulated=False, stepwise=False):
 
     else: sys.exit("ERROR: look do you want ALEX or not?\nSet params.ALEX=True or False")
 
-def chung_kennedy(data, window, R): #God only knows
+def chung_kennedy_filter(data, window, R): #God only knows
     # Based on Adam Wollman's code, just translated
     # Originally based on some old Fortran written in 2000
     # A good Fortran programmer can write Fortran in any language....
@@ -102,43 +102,47 @@ def chung_kennedy(data, window, R): #God only knows
     N = len(data)
     extended_data = np.zeros(N+2*window)
     extended_data[window:-window]=data
-    for i in range(window):
-        extended_data[window-i-1] = data[i]
-        extended_data[N+window+i] = data[N-i]
+    for i in range(1,window+1):
+        extended_data[window-i] = data[i-1]
+        extended_data[N+window+i-1] = data[N-i]  
     N_extended = extended_data.shape[0]
     wdiffx = np.zeros(N_extended)
-    datamx = []
+    datamx = np.zeros((N+window,window))
     datx = np.zeros((N+window+1,window))
-    for i in range(len(window)):
-        datamx[:,i] = extended_data[i:N+window+i]
+    for i in range(window):
+        stop = N+window+i
+        datamx[:,i] = extended_data[i:stop]
     wx = np.mean(datamx,axis=1)
     sx = np.std(datamx,axis=1,ddof=1)
     XP = wx[:N_extended]
     XM = wx[window+1:N_extended+window+1]
     SDP = sx[:N]
-    SDM = sx[window+1:N_extended+window+1]
+    SDM = sx[window:N_extended+window]
     DSD = SDP-SDM
     SP = SDP**2
-    SM = SM**2
+    SM = SDM**2
     
     # Form switching functions (?)
     RSP = SP**R
     RSM = SM**R
     GM = RSP/(RSP+RSM)
     GP = RSM/(RSP+RSM)
-    
-    if GM>=0 and GM<=1 and GP>=0 and GP<=1:
-        S = GM*SM + GP*SP
-        XX = GP*XP + GM*XM
-    else:
-        S = SP
-        XX = XP
-    SD = np.sqrt(S)
-    SE = np.sqrt(S/window)
-    TX = (XP-XM)/(np.sqrt(2.)*SE);
-    DX = (XP-XM)
-    XPRE = XP
-    return [XX,TX,DX,SD,DSD,XPRE]
+
+    S = np.zeros(GP.shape)
+    XX = np.zeros(GP.shape)
+    for i in range(len(GP)-1):
+        if GM[i]>=0 and GM[i]<=1 and GP[i]>=0 and GP[i]<=1:
+            S[i] = GM[i]*SM[i] + GP[i]*SP[i]
+            XX[i] = GP[i]*XP[i] + GM[i]*XM[i]
+        else:
+            S[i] =  SP[i]
+            XX[i] = XP[i]
+    # SD = np.sqrt(S)
+    # SE = np.sqrt(S/window)
+    # TX = (XP-XM)/(np.sqrt(2.)*SE);
+    # DX = (XP-XM)
+    # XPRE = XP
+    return [XX] #[XX,TX,DX,SD,DSD,XPRE]
 
 def colocalize(params, Ltrajs, Rtrajs):
     image_data = images.ImageData()
@@ -302,9 +306,9 @@ def plot_snr(params,snr,channel=None):
 
 
 def get_isingle(params, intensities, channel=None):
-    scale = 0
+    scale = 3
     intensities = intensities[intensities > 1]
-    bandwidth = 0.7
+    bandwidth = 0.1
     kde = gaussian_kde(intensities, bw_method=bandwidth)
     x = np.linspace(0, np.amax(intensities), int(np.amax(intensities)))
     pdf = kde.evaluate(x)
@@ -410,12 +414,16 @@ def get_diffusion_coef(traj_list, params, channel=None):
     return diffusion_coefs, loc_precisions
 
 
-def plot_traj_intensities(params, trajs, channel=None):
+def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
+    if chung_kennedy: ck_data = []
     for traj in trajs:
         t = np.array(traj.intensity)
-        plt.plot(t/10**5)
+        plt.plot(t/10**3)
+        ck_data.append(chung_kennedy_filter(t,params.chung_kennedy_window,1)[0][:-1])
+    ofile = params.name+"_chung_kennedy_data.csv"
+    np.savetxt(ofile, ck_data, '%s', delimiter=',')
     plt.xlabel("Frame number")
-    plt.ylabel("Intensity (camera counts per pixel x$10^5$)")
+    plt.ylabel("Intensity (camera counts per pixel x$10^3$)")
     if channel=="L":
         plt.title("Left channel trajectory intensity")
         ofile = params.name+"_Lchannel_trajectory_intensities.png"
@@ -423,11 +431,26 @@ def plot_traj_intensities(params, trajs, channel=None):
         plt.title("Right channel trajectory intensity")
         ofile = params.name+"_Rchannel_trajectory_intensities.png"
     else:
-        #plt.title("Whole frame trajectory intensity")
+        plt.title("Whole frame trajectory intensity")
         ofile = params.name+"_trajectory_intensities.png"
     plt.savefig(ofile, dpi=300)
     plt.show()
-
+    if chung_kennedy:
+        for ck in ck_data:
+            plt.plot(ck)
+        plt.xlabel("Frame number")
+        plt.ylabel("Intensity (camera counts per pixel x$10^3$)")
+        if channel=="L":
+            plt.title("Left channel Chung-Kennedy intensity")
+            ofile = params.name+"_Lchannel_CK_filtered_intensities.png"
+        elif channel=="R":
+            plt.title("Right channel Chung-Kennedy intensity")
+            ofile = params.name+"_Rchannel_CK_filtered_intensities.png"
+        else:
+            plt.title("Whole frame Chung-Kennedy intensity")
+            ofile = params.name+"_CK_filtered_intensities.png"
+        plt.savefig(ofile, dpi=300)      
+        plt.show()
 
 def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None):
     # Let's do the easy part first - the ones where they do not start at the start
