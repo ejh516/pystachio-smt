@@ -73,7 +73,7 @@ class Spots:
         )
 
         # Optionally apply gaussian filtering to the frame
-        if params.filter_image == "gaussian":
+        if params.filter_image == "Gaussian":
             blurred_frame = cv2.GaussianBlur(img_frame, (3, 3), 0)
         else:
             blurred_frame = img_frame.copy()

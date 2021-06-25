@@ -302,11 +302,11 @@ def plot_snr(params,snr,channel=None):
 
 
 def get_isingle(params, intensities, channel=None):
-    scale = 5
+    scale = 0
     intensities = intensities[intensities > 1]
     bandwidth = 0.7
     kde = gaussian_kde(intensities, bw_method=bandwidth)
-    x = np.linspace(0, np.amax(intensities), np.amax(intensities))
+    x = np.linspace(0, np.amax(intensities), int(np.amax(intensities)))
     pdf = kde.evaluate(x)
     peak = x[np.where(pdf == np.amax(pdf))].astype('int')
     peakval = np.amax(pdf)
@@ -412,10 +412,8 @@ def get_diffusion_coef(traj_list, params, channel=None):
 
 def plot_traj_intensities(params, trajs, channel=None):
     for traj in trajs:
-        t = traj.intensity
-        for i in range(len(t)):
-            t[i] /= 10**5
-        plt.plot(t)
+        t = np.array(traj.intensity)
+        plt.plot(t/10**5)
     plt.xlabel("Frame number")
     plt.ylabel("Intensity (camera counts per pixel x$10^5$)")
     if channel=="L":
@@ -437,7 +435,7 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
     startframe = 100000
     for traj in trajs:
         if traj.start_frame<startframe and traj.length>=params.num_stoic_frames: startframe=traj.start_frame
-        print(startframe)
+        # print(startframe)
     for traj in trajs:
         if traj.length <params.num_stoic_frames:
             continue
@@ -466,13 +464,13 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
                 else:
                     continue 
                     # traj.stoichiometry = traj.intensity[0] / isingle
-                stoics.append(traj.stoichiometry)
+        stoics.append(traj.stoichiometry[0])
     stoics = np.array(stoics)
-    max_stoic = int(np.amax(np.round(stoics)))
+    max_stoic = int(np.round(np.amax(stoics)))
 
     bandwidth = 0.7
     kde = gaussian_kde(stoics, bw_method=bandwidth)
-    x = np.linspace(0, np.amax(stoics), np.amax(stoics))
+    x = np.linspace(0, max_stoic, max_stoic)
     pdf = kde.evaluate(x)
     
     fig, ax1 = plt.subplots()
