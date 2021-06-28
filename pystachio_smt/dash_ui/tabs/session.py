@@ -18,10 +18,16 @@ from dash.dependencies import Input,Output,State
 
 from datetime import datetime
 
+from parameters import Parameters, default_parameters
 from dash_ui.app import app
 
 full_data_folder=os.path.join(os.getcwd(),'web_data')
 web_data_folder='/web_data'
+
+input_list = []
+for param in default_parameters:
+    if (default_parameters[param]['class'] in ["tracking", "image", "postprocessing"]):
+        input_list.append('{}-{}'.format(default_parameters[param]['class'], param))
 
 def layout(params):
     return html.Div(id='session-tab-container', children=[
@@ -168,3 +174,21 @@ def new_session(n_clicks):
         os.exit()
 
     return [session_id]
+
+@app.callback(
+        Output('session-parameters-store', 'data'),
+        [Input('session-parameters-store', 'data')] +
+        [Input(input_box, 'value') for input_box in input_list]
+)
+def update_parameters(input_json, *args):
+    params = Parameters(json.loads(input_json))
+    params._params = json.loads(input_json)
+    for i in range(len(input_list)):
+        param_class, param = input_list[i].split('-')
+        if params._params[param]['value'] != args[i]:
+            print(f"Setting {param} from {params._params[param]['value']} to {args[i]}")
+            params._params[param]['value'] = args[i]
+
+    params_json = str(json.dumps(params._params))
+
+    return params_json

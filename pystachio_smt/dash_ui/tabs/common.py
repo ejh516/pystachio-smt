@@ -20,6 +20,7 @@ def get_param_input(name, param, param_class):
             debounce=True,
             placeholder=param['value'],
             style={'width':'200px'},
+            value=param['value'],
         )
     elif param_type is str:
         if 'options' in param.keys():
@@ -37,6 +38,7 @@ def get_param_input(name, param, param_class):
                 debounce=True,
                 placeholder=param['value'],
                 size = '100%',
+                value=param['value'],
             )
     elif param_type is bool:
         input_box = dcc.RadioItems(
@@ -49,6 +51,15 @@ def get_param_input(name, param, param_class):
 #EJH#             labelStyle={'display': 'inline-block'},
         )
 
+    elif param_type is list:
+        input_box = dcc.Input(
+            id = param_class + "-" + name,
+            type='text',
+            debounce=True,
+            placeholder=str(param['value']),
+            size = '100%',
+            value=str(param['value']),
+        )
     else:
 #EJH#     elif param_type is list:
         input_box = html.Label('Error processing', style={'color': '#fff', 'width': '100px'}),

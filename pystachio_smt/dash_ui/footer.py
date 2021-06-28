@@ -16,7 +16,7 @@ def layout():
     footer = html.Div(id="footer",
         children=[
             """
-            PySTACHIO-SMT was developed by Edward Higgins and Jack Shephard in
+            PySTACHIO-SMT was developed by Edward Higgins and Jack Shepherd in
             collaboration with the Physics of Life group at the University of
             York. For more information, go to the
             """,
