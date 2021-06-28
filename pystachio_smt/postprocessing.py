@@ -14,13 +14,14 @@ from scipy.spatial import distance_matrix
 import os
 import trajectories, images
 
+display_figures = False
 def postprocess(params, simulated=False, stepwise=False):
     if not params.ALEX:
         trajs = []
         if False: #simulated:
-            trajs = trajectories.read_trajectories(params.seed_name + "_simulated_trajectories.tsv")
+            trajs = trajectories.read_trajectories(params.name + "_simulated_trajectories.tsv")
         else:
-            trajs = trajectories.read_trajectories(params.seed_name + "_trajectories.tsv")
+            trajs = trajectories.read_trajectories(params.name + "_trajectories.tsv")
         spots = trajectories.to_spots(trajs)
         print(f"Looking at {len(trajs)} trajectories across {len(spots)} frames")
 
@@ -35,7 +36,7 @@ def postprocess(params, simulated=False, stepwise=False):
         if params.calculate_isingle:
             calculated_isingle = get_isingle(params,intensities)
         else:
-            calculated_isingle = params.Isingle
+            calculated_isingle = params.I_single
         calculated_snr = plot_snr(params,snrs)
         dc, lp = get_diffusion_coef(trajs, params)
         if simulated:
@@ -50,9 +51,9 @@ def postprocess(params, simulated=False, stepwise=False):
         if params.copy_number==True: get_copy_number(params, calculated_isingle)
 
     elif params.ALEX:
-        if params.colocalise==True:
-            Rtrajs = trajectories.read_trajectories(params.seed_name + "_Rchannel_trajectories.tsv")
-            Ltrajs = trajectories.read_trajectories(params.seed_name + "_Lchannel_trajectories.tsv")
+        if params.colocalize==True:
+            Rtrajs = trajectories.read_trajectories(params.name + "_Rchannel_trajectories.tsv")
+            Ltrajs = trajectories.read_trajectories(params.name + "_Lchannel_trajectories.tsv")
             Rspots = trajectories.to_spots(Rtrajs)
             Lspots = trajectories.to_spots(Ltrajs)
 
@@ -90,13 +91,13 @@ def postprocess(params, simulated=False, stepwise=False):
             #     get_copy_number(params, Lcalculated_isingle, channel="L")
             #     get_copy_number(params, Rcalculated_isingle, channel="R")
 
-            if params.colocalise: colocalise(params, Ltrajs, Rtrajs)
+            if params.colocalize: colocalize(params, Ltrajs, Rtrajs)
 
     else: sys.exit("ERROR: look do you want ALEX or not?\nSet params.ALEX=True or False")
 
-def colocalise(params, Ltrajs, Rtrajs):
+def colocalize(params, Ltrajs, Rtrajs):
     image_data = images.ImageData()
-    image_data.read(params)
+    image_data.read(params.name + '.tif', params)
     imageL=np.zeros((image_data.num_frames//2,image_data.frame_size[1],image_data.frame_size[0]//2))
     imageR=np.zeros((image_data.num_frames//2,image_data.frame_size[1],image_data.frame_size[0]//2))
     if params.start_channel=='L':
@@ -132,7 +133,7 @@ def colocalise(params, Ltrajs, Rtrajs):
                 Llinks.append(id1[j])
                 Rlinks.append(id2[j])
                 nlinks.append(1)
-    outfile = params.seed_name + "_colocalized_trajectories.tsv"
+    outfile = params.name + "_colocalized_trajectories.tsv"
     f = open(outfile, 'w')
     f.write("Left_traj\tRight_traj\n_frames")
     for i in range(len(Llinks)):
@@ -152,7 +153,8 @@ def colocalise(params, Ltrajs, Rtrajs):
     plt.xticks([])
     plt.yticks([])
     plt.ylim([0,x])
-    plt.show()
+    if display_figures:
+        plt.show()
     plt.imshow(disp_frame, cmap="Greys_r")
     for traj in Ltrajs:
         if traj.id in id1:
@@ -166,8 +168,9 @@ def colocalise(params, Ltrajs, Rtrajs):
     plt.xticks([])
     plt.plot([x,x],[0,x], 'w--')
     plt.ylim([0,x])
-    plt.savefig("colocalised_spots.png", dpi=300)
-    plt.show()
+    plt.savefig("colocalized_spots.png", dpi=300)
+    if display_figures:
+        plt.show()
 
 def linker(params, spots1, spots2): #spots1 and spots2 are arrays going xpos, ypos, xwidth, ywidth, traj#
     s1_pos = []
@@ -181,7 +184,7 @@ def linker(params, spots1, spots2): #spots1 and spots2 are arrays going xpos, yp
         s2_pos.append(spots2[i][0])
         s2_width.append(spots2[i][1])
     dm = distance_matrix(s1_pos,s2_pos)
-    dm[dm>params.colocalise_distance]=-1
+    dm[dm>params.colocalize_distance]=-1
     overlap = np.zeros(dm.shape)
     for i in range(len(s1_pos)):
         for j in range(len(s2_pos)):
@@ -204,7 +207,7 @@ def get_copy_number(params, calculated_isingle, channel=None):
     image_data.read(params)
     frame =image_data.pixel_data[spots.laser_on_frame,:,:]
     copy_nums = []
-    f = open(params.seed_name + "_copy_numbers.tsv")
+    f = open(params.name + "_copy_numbers.tsv")
     f.write("Cell\tCopy number\n")
     bg = np.mean(frame[image_data.mask==0])
     for i in range(1,np.amax(image_data.mask_data)+1):
@@ -213,7 +216,7 @@ def get_copy_number(params, calculated_isingle, channel=None):
     f.close()
     # import tifffile as tiff
     # copy_nums = []
-    # f = open(params.seed_name + "_copy_numbers.tsv", 'w')
+    # f = open(params.name + "_copy_numbers.tsv", 'w')
     # f.write("Cell\tCopy number\n")
     # for sim in range(1,11):
     #     image_data = tiff.imread("../data/Data4Jack/simImages/"+str(sim)+".tif")
@@ -237,17 +240,18 @@ def plot_snr(params,snr,channel=None):
     plt.legend()
     if channel=="L": 
         plt.title("Left hand channel SNR plot")
-        outseed = params.seed_name + "Lchannel_SNR"
+        outseed = params.name + "Lchannel_SNR"
     elif channel=="R":
         plt.title("Right hand channel SNR plot")
-        outseed = params.seed_name + "Rchannel_SNR"
+        outseed = params.name + "Rchannel_SNR"
     else:
         plt.title("Whole frame SNR plot")
-        outseed = params.seed_name + "_SNR"
+        outseed = params.name + "_SNR"
     plt.savefig(outseed+"_plot.png", dpi=300)
-    plt.show()
+    if display_figures:
+        plt.show()
     peak = x[np.where(pdf == np.amax(pdf))]
-    ofile = params.seed_name + "_data.tsv"
+    ofile = params.name + "_data.tsv"
     f = open(ofile, 'w')
     for i in range(len(snr)):
         f.write(str(snr[i])+"\n")
@@ -279,18 +283,19 @@ def get_isingle(params, intensities, channel=None):
     l3 = ax1.plot([peak/10**scale,peak/10**scale],[0,10], 'r--', label="Isingle", lw=2)
     if channel=="L": 
         plt.title("Left hand channel intensity plot\nIsingle = %i"%(np.round(peak)))
-        outseed = params.seed_name + "Lchannel_intensities"
+        outseed = params.name + "Lchannel_intensities"
     elif channel=="R":
         plt.title("Right hand channel intensities plot\nIsingle = %i"%(np.round(peak)))
-        outseed = params.seed_name + "Rchannel_intensity"
+        outseed = params.name + "Rchannel_intensity"
     else:
         #plt.title("Whole frame intensities\nIsingle = %i"%(np.round(peak)))
-        outseed = params.seed_name + "_intensity"
+        outseed = params.name + "_intensity"
     lns = l2+l3
     labs = [l.get_label() for l in lns]
     ax2.legend(lns, labs, loc=0)
     plt.savefig(outseed+"_plot.png", dpi=300)   
-    plt.show()
+    if display_figures:
+        plt.show()
     ofile = outseed + "_data.tsv"
     f = open(ofile, 'w')
     for i in range(len(intensities)):
@@ -304,7 +309,7 @@ def get_diffusion_coef(traj_list, params, channel=None):
     loc_precisions = []
     for traj in traj_list:
         trajectory_length = traj.length
-        if trajectory_length < params.MSD_num_points + 1:
+        if trajectory_length < params.msd_num_points + 1:
             continue
         MSD = np.zeros(trajectory_length - 1)  # mean squared displacement
         n = np.zeros(
@@ -312,20 +317,20 @@ def get_diffusion_coef(traj_list, params, channel=None):
         )  # used to measure number of trajectories of given length for weighting
         tau = np.zeros(trajectory_length - 1)  # times between MSDs
         track_lengths = np.zeros(trajectory_length - 1)
-        x = np.array(traj.path)[:, 0] * params.pixelSize
-        y = np.array(traj.path)[:, 1] * params.pixelSize
+        x = np.array(traj.path)[:, 0] * params.pixel_size
+        y = np.array(traj.path)[:, 1] * params.pixel_size
         for i in range(1, trajectory_length):
             sqd = (x[i:] - x[: trajectory_length - i]) ** 2 + (
                 y[i:] - y[: trajectory_length - i]
             ) ** 2
             MSD[i - 1] = np.mean(sqd)
             track_lengths[i - 1] = len(sqd)
-            tau[i - 1] = i * params.frameTime
-        tau = tau[: params.MSD_num_points]
-        MSD = MSD[: params.MSD_num_points]
-        track_lengths = track_lengths[: params.MSD_num_points]
-        weights = track_lengths[: params.MSD_num_points].astype("float32") / float(
-            np.amax(track_lengths[: params.MSD_num_points])
+            tau[i - 1] = i * params.frame_time
+        tau = tau[: params.msd_num_points]
+        MSD = MSD[: params.msd_num_points]
+        track_lengths = track_lengths[: params.msd_num_points]
+        weights = track_lengths[: params.msd_num_points].astype("float32") / float(
+            np.amax(track_lengths[: params.msd_num_points])
         )
         plt.plot(tau, MSD)
         plt.xlabel(r"$\tau$")
@@ -338,26 +343,28 @@ def get_diffusion_coef(traj_list, params, channel=None):
                 loc_precisions.append(np.sqrt(popt[1]) / 4.0)
         except:
             print("oh no")
-    plt.show()
+    if display_figures:
+        plt.show()
     plt.hist(diffusion_coefs)
     plt.xlabel("Diffusion coefficient ($\mu$m$^{2}$s$^{-1}$)")
     plt.ylabel("Number of foci trajectories")
     if channel=="L":
         plt.title("Left channel diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
-        ofile = params.seed_name+"_Lchannel_diff_coeff.png"
+        ofile = params.name+"_Lchannel_diff_coeff.png"
     elif channel=="R":
         plt.title("Right channel diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
-        ofile = params.seed_name+"_Rchannel_diff_coeff.png"
+        ofile = params.name+"_Rchannel_diff_coeff.png"
     else:
         #plt.title("Whole frame diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
-        ofile = params.seed_name+"_diff_coeff.png"
+        ofile = params.name+"_diff_coeff.png"
     plt.savefig(ofile, dpi=300)
-    plt.show()
-    f = open(params.seed_name + "_diff_coeff_data.tsv", "w")
+    if display_figures:
+        plt.show()
+    f = open(params.name + "_diff_coeff_data.tsv", "w")
     for i in range(len(diffusion_coefs)):
         f.write(str(float(diffusion_coefs[i]))+"\n")
     f.close()
-    f = open(params.seed_name + "_diff_coeff_loc_precision_data.tsv", "w")
+    f = open(params.name + "_diff_coeff_loc_precision_data.tsv", "w")
     for i in range(len(loc_precisions)):
         f.write(str(float(loc_precisions[i]))+"\n")
     f.close()
@@ -374,15 +381,16 @@ def plot_traj_intensities(params, trajs, channel=None):
     plt.ylabel("Intensity (camera counts per pixel x$10^5$)")
     if channel=="L":
         plt.title("Left channel trajectory intensity")
-        ofile = params.seed_name+"_Lchannel_trajectory_intensities.png"
+        ofile = params.name+"_Lchannel_trajectory_intensities.png"
     elif channel=="R":
         plt.title("Right channel trajectory intensity")
-        ofile = params.seed_name+"_Rchannel_trajectory_intensities.png"
+        ofile = params.name+"_Rchannel_trajectory_intensities.png"
     else:
         #plt.title("Whole frame trajectory intensity")
-        ofile = params.seed_name+"_trajectory_intensities.png"
+        ofile = params.name+"_trajectory_intensities.png"
     plt.savefig(ofile, dpi=300)
-    plt.show()
+    if display_figures:
+        plt.show()
 
 
 def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None):
@@ -429,29 +437,31 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
     plt.ylabel("N")
     if channel=="L":
         plt.title("Left channel stoichiometry")
-        oseed = params.seed_name+"_Lchannel_stoichiometry"
+        oseed = params.name+"_Lchannel_stoichiometry"
     elif channel=="R":
         plt.title("Right channel stoichiometry")
-        oseed = params.seed_name+"_Rchannel_stoichiometry"
+        oseed = params.name+"_Rchannel_stoichiometry"
     else:
         plt.title("Whole frame stoichiometry")
-        oseed = params.seed_name+"_stoichiometry"
+        oseed = params.name+"_stoichiometry"
     plt.savefig(oseed+"_histogram.png", dpi=300)
-    plt.show()
+    if display_figures:
+        plt.show()
     plt.scatter(range(len(stoics)), stoics)
     plt.xlabel("Spot #")
     plt.ylabel("Raw stoichiometry")
     if channel=="L":
         plt.title("Left channel stoichiometry")
-        oseed = params.seedname+"_Lchannel_stoichiometry"
+        oseed = params.name+"_Lchannel_stoichiometry"
     elif channel=="R":
         plt.title("Right channel stoichiometry")
-        oseed = params.seedname+"_Rchannel_stoichiometry"
+        oseed = params.name+"_Rchannel_stoichiometry"
     else:
         plt.title("Whole frame stoichiometry")
-        oseed = params.seed_name+"_stoichiometry"
+        oseed = params.name+"_stoichiometry"
     plt.savefig(oseed+"_scatter.png", dpi=300)
-    plt.show()
+    if display_figures:
+        plt.show()
     f = open(oseed + "_data.tsv", "w")
     for i in range(len(stoics)):
         f.write(str(float(stoics[i]))+"\n")

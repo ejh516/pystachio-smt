@@ -19,15 +19,15 @@ import trajectories
 
 def render(params):
     image_data = images.ImageData()
-    image_data.read(params)
-    trajs = trajectories.read_trajectories(params.seed_name + "_trajectories.tsv")
-    true_trajs = trajectories.read_trajectories(params.seed_name + "_simulated_trajectories.tsv")
+    image_data.read(params.name+".tif", params)
+    trajs = trajectories.read_trajectories(params.name + "_trajectories.tsv")
+    true_trajs = trajectories.read_trajectories(params.name + "_simulated.tsv")
 
     maxval = image_data.max_intensity()
     figure = plt.figure()
     plt_frames = []
 
-    px_size = params.pixelSize
+    px_size = params.pixel_size
     fr_size = image_data.frame_size
 
     colors = list(mcolors.TABLEAU_COLORS.keys())

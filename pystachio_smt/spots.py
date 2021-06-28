@@ -67,13 +67,13 @@ class Spots:
         img_frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         # Get structural element (map with disk of ones in a square of 0s) [strel]
-        disk_size = 2 * params.disk_radius - 1
+        disk_size = 2 * params.struct_disk_radius - 1
         disk_kernel = cv2.getStructuringElement(
             cv2.MORPH_ELLIPSE, (disk_size, disk_size)
         )
 
         # Optionally apply gaussian filtering to the frame
-        if params.filter_image == "gaussian":
+        if params.filter_image == "Gaussian":
             blurred_frame = cv2.GaussianBlur(img_frame, (3, 3), 0)
         else:
             blurred_frame = img_frame.copy()
@@ -385,5 +385,5 @@ class Spots:
                 self.width[i,0] = p[3]
                 self.width[i,1] = p[4]
             else: # something went wrong
-                self.width[i,0] = params.PSFwidth
-                self.width[i,1] = params.PSFwidth
+                self.width[i,0] = params.psf_width
+                self.width[i,1] = params.psf_width

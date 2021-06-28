@@ -6,6 +6,10 @@
 #
 # Distributed under terms of the MIT license.
 
-import dash
-app = dash.Dash(__name__)
+"""
 
+"""
+import dash_ui.tabs.session
+import dash_ui.tabs.images
+import dash_ui.tabs.tracking
+import dash_ui.tabs.postprocessing

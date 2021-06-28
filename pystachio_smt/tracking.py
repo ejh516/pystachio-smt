@@ -34,7 +34,7 @@ import images
 def track(params):
     # Read in the image data
     image_data = images.ImageData()
-    image_data.read(params)
+    image_data.read(params.name + ".tif", params)
 
     if params.ALEX==True:
         imageL=np.zeros((image_data.num_frames//2,image_data.frame_size[1],image_data.frame_size[0]//2))
@@ -56,7 +56,7 @@ def track(params):
         for frame in range(image_data.num_frames):
             all_spots.append(track_frame(image_data[frame], frame, params))
         trajs = trajectories.build_trajectories(all_spots, params)
-        trajectories.write_trajectories(trajs, params, channel='L')
+        trajectories.write_trajectories(trajs, params.name +  "_Lchannel_trajectories.tsv")
 
         #RHS
         image_data.pixel_data = imageR
@@ -64,7 +64,7 @@ def track(params):
         for frame in range(image_data.num_frames):
             all_spots.append(track_frame(image_data[frame], frame, params))
         trajs = trajectories.build_trajectories(all_spots, params)
-        trajectories.write_trajectories(trajs, params, channel='R')
+        trajectories.write_trajectories(trajs, params.name +  "_Rchannel_trajectories.tsv")
 
     # For each frame, detect spots
     else:
@@ -83,7 +83,7 @@ def track(params):
 
         # Link the spot trajectories across the frames
         trajs = trajectories.build_trajectories(all_spots, params)
-        trajectories.write_trajectories(trajs, params)
+        trajectories.write_trajectories(trajs, params.name + "_trajectories.tsv")
 
 def track_frame(frame_data, frame, params):
         # Find the spots in this frame
