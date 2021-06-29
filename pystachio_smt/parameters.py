@@ -27,6 +27,11 @@ from difflib import SequenceMatcher
 
 default_parameters = {
     # Runtime parameters
+    'display_figures':
+        { 'description': 'Figures (Y/n)',
+          'level': 'basic',
+          'class': 'general',
+          'default': True },    
     'num_procs':
         { 'description': 'The number of CPU processes to run with',
           'level': 'basic',
