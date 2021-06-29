@@ -15,7 +15,9 @@ import os
 import trajectories, images
 
 display_figures = False
+
 def postprocess(params, simulated=False, stepwise=False):
+    display_figures = params.display_figures
     if not params.ALEX:
         trajs = []
         if False: #simulated:
