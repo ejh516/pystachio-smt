@@ -6,124 +6,148 @@
  */
 
 :root {
-  --main-radius:5px;
-  --main-padding:5px;
-  --navbar-fg: #93c572;
-  --navbar-bg: #000;
-  --sidebar-bg: #0081af;
-  --sidebar-fg: #000;
-  --graphs-pane-bg: ;
-  --graphs-pane-fg: ;
-  --img-pane-bg: ;
-  --img-pane-fg: ;
+    --main-radius:5px;
+    --main-padding:5px;
+    --navbar-fg: #93c572;
+    --navbar-bg: #0c1753;
+    --sidebar-bg: #3b376e;
+    --sidebar-fg: #fff;
+    --info-pane-bg: #aea9c3;
+    --info-pane-fg: #000;
+    --img-pane-bg: #fff;
+    --img-pane-fg: #000;
+    --footer-bg: #d6d3e1;
+    --footer-fg: #000;
 }
 
 
 body {
-  border: 0px;
-  padding: 0px;
-  margin: auto;
-  align: center;
-  font-family: 'Montserrat', sans-serif;
+    border: 0px;
+    padding: 0px;
+    margin: auto;
+    align: center;
+    font-family: 'Montserrat', sans-serif;
+    overflow: hidden;
 }
 
-#dash_app {
-  display: grid;
-  border: 0px;
-  padding: 0.5rem;
-  height: 100%;
-  width: 95%;
-  align: center;
-  margin: auto;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
-  grid-template-rows: 64px 700px 1.0fr 64px;
-  grid-template-areas:
-    "nav nav nav nav"
-    "img img img sidebar"
-    "graphs graphs graphs sidebar"
-    "footer footer footer footer";
+#plot {
+    background: var(--navbar-bg);
+}
+
+#dash-app {
+    display: grid;
+    border: 0px;
+    padding: 0.5rem;
+    height: 100vh;
+    width: 98%;
+    align: center;
+    margin: auto;
+    grid-template-columns: 480px 1fr;
+    grid-template-rows: 64px 1fr 64px;
+    grid-template-areas:
+    "nav nav"
+    "sidebar main"
+    "footer footer";
     grid-gap: 0.2rem;
 }
 
-#navbar {
-  grid-area: nav;
-  background: var(--navbar-bg);
-  color: var(--navbar-fg);
-  border-radius: var(--main-radius);
-  padding: var(--main-padding);
-}
-#navbar h1 {
-    align: top;
-    margin: 0px;
+#main-content {
+    height: 100%;
+    grid-area: main;
+    overflow-y: auto;
 }
 
-#img_pane {
-  grid-area: img;
-  background: var(--img-pane-bg);
-  color: var(--img-pane-fg);
-  align: auto;
-  border-radius: var(--main-radius);
-  padding: var(--main-padding);
-  height: 100%;
+#navbar {
+    grid-area: nav;
+    background: var(--navbar-bg);
+    color: var(--navbar-fg);
+    border-radius: var(--main-radius);
+    padding: var(--main-padding);
 }
-#image-graph {
-    height: 600px;
+#navbar h1 {
+    align: auto;
+    margin: 0px;
+    padding: auto;
+}
+
+#img-pane {
+    grid-area: img;
+    background: var(--img-pane-bg);
+    color: var(--img-pane-fg);
+    align: auto;
+    border-radius: var(--main-radius);
+    padding: var(--main-padding);
 }
 
 #sidebar {
-  grid-area: sidebar;
-  background: var(--sidebar-bg);
-  color: var(--sidebar-fg);
-  border-radius: var(--main-radius);
-  padding: var(--main-padding);
+    height: 100%;
+    grid-area: sidebar;
+    background: var(--sidebar-bg);
+    color: var(--sidebar-fg);
+    border-radius: var(--main-radius);
+    padding: var(--main-padding);
+    overflow-y: auto;
 }
-#sidebar tr {
-  border: 20px;
-  text-align: left;
+#sidebar table {
+    border: 20px;
+    width: 90%;
+    margin: auto;
 }
 
-#graphs_pane {
-  grid-area: graphs;
-  background: #cbe0e9;
-  color: #000;
-  border-radius: var(--main-radius);
-  padding: var(--main-padding);
+#sidebar tr {
+    text-align: left;
+}
+
+#info-pane {
+    grid-area: info;
+    min-height: 100%;
+    background: var(--info-pane-bg);
+    color: var(--info-pane-fg);
+    border-radius: var(--main-radius);
+    padding: var(--main-padding);
+    overflow-x: auto;
 }
 
 .graph {
-  margin: 10px;
-  width: 600px;
-  height: 400px;
-  display: inline-block;
-  border: 3px solid black;
+    margin: 10px;
+    width: 600px;
+    height: 400px;
+    display: inline-block;
+    border: 3px solid black;
+    background: black;
 }
 
 #footer {
-  grid-area: footer;
-  background-color: #a3c5cf;
-  text-align: center;
-  font-size: 12px;
-  padding: 15px;
-  color: #000;
-  border-radius: var(--main-radius);
-  padding: var(--main-padding);
+    background: var(--footer-bg);
+    color: var(--footer-fg);
+    grid-area: footer;
+    text-align: center;
+    font-size: 12px;
+    border-radius: var(--main-radius);
+    padding: var(--main-padding);
 }
 
 @media only screen and (max-width: 1100px) {
-  .container {
-    grid-template-columns: 1fr;
-    grid-template-rows: 64px 520px 300px 1.0fr 64px;
-    grid-template-areas:
-      "nav"
-      "simulation"
-      "sidebar"
-      "graphs"
-      "footer";
-  }
-}
+    body {
+        overflow: visible;
+    }
 
-body {
-	background: white;
-	color: black;
-}
+    #dash-app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 64px 3fr 1fr 64px;
+        grid-template-areas:
+        "nav"
+        "sidebar"
+        "main"
+        "footer";
+    }
 
+    #main-content {
+        overflow: visible;
+    }
+    #sidebar {
+        overflow: visible;
+    }
+    #info-pane {
+        overflow: visible;
+}

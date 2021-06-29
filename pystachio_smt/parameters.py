@@ -31,7 +31,7 @@ default_parameters = {
         { 'description': 'The number of CPU processes to run with',
           'level': 'basic',
           'class': 'general',
-          'default': 1 },
+          'default': 4 },
     'tasks':
         { 'description': 'Which task(s) to perform in the run',
           'level': 'basic',
@@ -54,7 +54,7 @@ default_parameters = {
         { 'description': 'Number of frames to simulate',
           'level': 'basic',
           'class': 'image',
-          'default': 10 },
+          'default': 0 },
     'frame_size':
         { 'description': 'Size of frame to simulate ([x,y])',
           'level': 'basic',
@@ -425,7 +425,7 @@ class Parameters:
                 sys.exit(f"ERROR: No such parameter '{key}'")
 
             if key == "pixel_size":
-                self.PSFwidth = 0.160 / self.pixel_size
+                self.psf_width = 0.160 / self.pixel_size
 
     def param_dict(self, param_class=''):
         param_dict = {}

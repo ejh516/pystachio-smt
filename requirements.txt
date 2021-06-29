@@ -5,3 +5,5 @@ dash-bootstrap-components
 scipy
 matplotlib
 numba
+tifffile
+pandas

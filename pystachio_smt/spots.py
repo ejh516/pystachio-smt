@@ -385,5 +385,5 @@ class Spots:
                 self.width[i,0] = p[3]
                 self.width[i,1] = p[4]
             else: # something went wrong
-                self.width[i,0] = params.PSFwidth
-                self.width[i,1] = params.PSFwidth
+                self.width[i,0] = params.psf_width
+                self.width[i,1] = params.psf_width

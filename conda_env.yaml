@@ -1,0 +1,13 @@
+name: pystachio_env
+channels:
+  - conda-forge
+dependencies:
+  - numpy
+  - scipy
+  - matplotlib
+  - py-opencv
+  - dash
+  - dash-bootstrap-components
+  - plotly
+  - tifffile
+  - numba
