@@ -27,6 +27,11 @@ from difflib import SequenceMatcher
 
 default_parameters = {
     # Runtime parameters
+    'display_figures':
+        { 'description': 'Figures (Y/n)',
+          'level': 'basic',
+          'class': 'general',
+          'default': True },    
     'num_procs':
         { 'description': 'The number of CPU processes to run with',
           'level': 'basic',
@@ -208,6 +213,21 @@ default_parameters = {
           'default': 5 },
 
     # Postprocessing parameters
+    'display_figures':
+        { 'description': 'Whether or not to display the figures live in MatPlotLib',
+          'level': 'basic',
+          'class': 'postprocessing',
+          'default': True},
+    'chung_kennedy_window':
+        { 'description': 'Window width for Chung-Kennedy filtering',
+          'level': 'basic',
+          'class': 'postprocessing',
+          'default': 3},
+    'chung_kennedy':
+        { 'description': 'Flag to specify whether or not to Chung-Kennedy filter intensity tracks',
+          'level': 'basic',
+          'class': 'postprocessing',
+          'default': True},
     'msd_num_points':
         { 'description': 'Number of points used to calculate the mean-squared displacement',
           'level': 'basic',
