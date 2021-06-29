@@ -70,7 +70,7 @@ default_parameters = {
           'level': 'advanced',
           'class': 'image',
           'default': 0.120 },
-    'PSFwidth':
+    'psf_width':
         { 'description': '?',
           'level': 'advanced',
           'class': 'image',
@@ -208,6 +208,11 @@ default_parameters = {
           'default': 5 },
 
     # Postprocessing parameters
+    'display_figures':
+        { 'description': 'Whether or not to display the figures live in MatPlotLib',
+          'level': 'basic',
+          'class': 'postprocessing',
+          'default': True},
     'chung_kennedy_window':
         { 'description': 'Window width for Chung-Kennedy filtering',
           'level': 'basic',
