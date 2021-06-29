@@ -452,6 +452,7 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
 
     if display_figures:
         plt.show()
+    plt.close()
     if chung_kennedy:
         for ck in ck_data:
             plt.plot(ck)
@@ -470,6 +471,7 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
         plt.savefig(ofile, dpi=300)
         if display_figures:
             plt.show()
+        plt.close()
 
 def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None):
     # Let's do the easy part first - the ones where they do not start at the start
