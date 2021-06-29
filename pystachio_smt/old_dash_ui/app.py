@@ -28,7 +28,6 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LITERA])
 
 def launch_app(params):
     app.title = "PySTACHIO"
-    print("Loading pystachio")
     app.layout = dash_ui.layout.build_layout(params)
     app.run_server(debug=False)
 
@@ -41,7 +40,6 @@ def launch_app(params):
 def update_slider(render_selection, vis_frame, seedname):
     params = Parameters()
     params.name = seedname
-    print(f"Opening {params.name}")
     image_data = images.ImageData()
     image_data.read(params.name + ".tif", params)
     fig = px.imshow(

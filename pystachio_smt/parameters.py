@@ -33,10 +33,10 @@ default_parameters = {
           'class': 'general',
           'default': True },    
     'num_procs':
-        { 'description': 'The number of CPU processes to run with',
+        { 'description': 'The number of CPU processes to run with (0 is serial)',
           'level': 'basic',
           'class': 'general',
-          'default': 4 },
+          'default': 0 },
     'tasks':
         { 'description': 'Which task(s) to perform in the run',
           'level': 'basic',
@@ -53,18 +53,13 @@ default_parameters = {
           'level': 'basic',
           'class': 'general',
           'default':  ''},
+    'verbose':
+        { 'description': 'Whether or not to display progress messages',
+          'level': 'basic',
+          'class': 'general',
+          'default':  True},
 
     # Image parameters
-    'num_frames':
-        { 'description': 'Number of frames to simulate',
-          'level': 'basic',
-          'class': 'image',
-          'default': 0 },
-    'frame_size':
-        { 'description': 'Size of frame to simulate ([x,y])',
-          'level': 'basic',
-          'class': 'image',
-          'default': [100,100] },
     'frame_time':
         { 'description': 'Time per frame in seconds',
           'level': 'advanced',
@@ -85,11 +80,11 @@ default_parameters = {
           'level': 'basic',
           'class': 'image',
           'default':  0},
-    'end_frame':
-        { 'description': 'The last frame of the image stack to analyse (-1 = use all frames)',
+    'num_frames':
+        { 'description': 'Number of frames to simulate/analyse',
           'level': 'basic',
           'class': 'image',
-          'default':  -1},
+          'default': 0 },
     'channel_split':
         { 'description': 'If/how the frames are split spatially',
           'level': 'basic',
@@ -118,6 +113,11 @@ default_parameters = {
           'level': 'basic',
           'class': 'simulation',
           'default': 10 },
+    'frame_size':
+        { 'description': 'Size of frame to simulate ([x,y])',
+          'level': 'basic',
+          'class': 'simulation',
+          'default': [100,100] },
     'I_single':
         { 'description': 'I_single value for simulated spots',
           'level': 'basic',

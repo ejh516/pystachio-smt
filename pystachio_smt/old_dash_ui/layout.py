@@ -28,7 +28,6 @@ render_options = [
 ]
 
 def build_layout(params):
-    print("LAYING OUT PAGE")
     layout["header-bar"] = build_header_bar()
     layout["left-pane"] = build_left_pane(params)
     layout["right-pane"] = build_right_pane(params)

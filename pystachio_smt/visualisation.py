@@ -33,7 +33,8 @@ def render(params):
     colors = list(mcolors.TABLEAU_COLORS.keys())
 
     if trajs:
-        print(f"Displaying {len(trajs)} trajectories")
+        if params.verbose:
+            print(f"Displaying {len(trajs)} trajectories")
         for traj in trajs:
             x = []
             y = []
@@ -48,7 +49,8 @@ def render(params):
             plt.plot(x_scaled,y_scaled,"o-",c=colors[traj.id % len(colors)])
 
     if true_trajs:
-        print(f"Displaying {len(true_trajs)} true trajectories")
+        if params.verbose:
+            print(f"Displaying {len(true_trajs)} true trajectories")
         for traj in true_trajs:
             x = []
             y = []

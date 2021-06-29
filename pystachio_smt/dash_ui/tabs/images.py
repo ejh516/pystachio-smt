@@ -48,7 +48,6 @@ def layout(params):
     prevent_initial_call=True
     )
 def apply_image_params(nclicks, active_file, params_json):
-    print(f"Running images on params.name")
     params = Parameters(json.loads(params_json))
     if ".tif" in active_file:
         params.name = active_file.replace('.tif','')

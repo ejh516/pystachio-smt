@@ -16,7 +16,7 @@ import trajectories, images
 
 display_figures = False
 
-def postprocess(params, simulated=False, stepwise=False):
+def postprocess(params, simulated=False):
     display_figures = params.display_figures
     if not params.ALEX:
         trajs = []
@@ -25,7 +25,8 @@ def postprocess(params, simulated=False, stepwise=False):
         else:
             trajs = trajectories.read_trajectories(params.name + "_trajectories.tsv")
         spots = trajectories.to_spots(trajs)
-        print(f"Looking at {len(trajs)} trajectories across {len(spots)} frames")
+        if params.verbose:
+            print(f"Looking at {len(trajs)} trajectories across {len(spots)} frames")
 
         intensities = np.array([])
         snrs = np.array([])
@@ -42,14 +43,16 @@ def postprocess(params, simulated=False, stepwise=False):
         calculated_snr = plot_snr(params,snrs)
         dc, lp = get_diffusion_coef(trajs, params)
         if simulated:
-            print(f"Simulated diffusion coefficient: {np.mean(dc)}")
-            print(f"Simulated Isingle:               {calculated_isingle[0]}")
+            if params.verbose:
+                print(f"Simulated diffusion coefficient: {np.mean(dc)}")
+                print(f"Simulated Isingle:               {calculated_isingle[0]}")
         else:
-            print(f"Tracked diffusion coefficient: {np.mean(dc)}")
+            if params.verbose:
+                print(f"Tracked diffusion coefficient: {np.mean(dc)}")
             #print(f"Tracked Isingle:               {calculated_isingle[0]}")
 
         plot_traj_intensities(params, trajs, params.chung_kennedy)
-        get_stoichiometries(trajs, calculated_isingle, params, stepwise_sim=stepwise)
+        get_stoichiometries(trajs, calculated_isingle, params)
         if params.copy_number==True: get_copy_number(params, calculated_isingle)
 
     elif params.ALEX:
@@ -86,8 +89,8 @@ def postprocess(params, simulated=False, stepwise=False):
             Rdc, Rlp = get_diffusion_coef(Rtrajs, params, channel="R")
             plot_traj_intensities(params, Ltrajs, channel="L")
             plot_traj_intensities(params, Rtrajs, channel="R")
-            get_stoichiometries(Ltrajs, L_isingle, params, stepwise_sim=stepwise, channel="L")
-            get_stoichiometries(Rtrajs, R_isingle, params, stepwise_sim=stepwise, channel="R")
+            get_stoichiometries(Ltrajs, L_isingle, params, channel="L")
+            get_stoichiometries(Rtrajs, R_isingle, params, channel="R")
             
             if params.copy_number==True: 
                 get_copy_number(params, Lcalculated_isingle, channel="L")
@@ -397,7 +400,7 @@ def get_diffusion_coef(traj_list, params, channel=None):
             if popt[1] > 0:
                 loc_precisions.append(np.sqrt(popt[1]) / 4.0)
         except:
-            print("oh no")
+            print("WARNING: Unable to fit curve")
     if params.display_figures:
         plt.show()
     plt.close()
@@ -437,7 +440,6 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
     ofile = params.name+"_chung_kennedy_data.csv"
     f = open(ofile, 'w')
     ck_data = np.array(ck_data)
-    print(ck_data[0])
     for ck in range(len(ck_data)): 
         f.write(str(ck_data[ck][0]))
         for j in range(len(ck_data[ck])): 
@@ -480,7 +482,7 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
             plt.show()
         plt.close()
 
-def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None):
+def get_stoichiometries(trajs, isingle, params, channel=None):
     # Let's do the easy part first - the ones where they do not start at the start
     stoics = []
     startframe = 100000

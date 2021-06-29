@@ -35,10 +35,10 @@ import trajectories
 
 
 def simulate(params):
+    if params.num_frames < 1:
+        sys.exit("ERROR: Cannot simulate image with num_frames < 0")
 
     # Make a spot array the same size as normal
-    if params.num_frames == 0:
-        sys.exit("ERROR: Cannot simulate image with num_frames=0")
     real_spots = [Spots(params.num_spots) for i in range(params.num_frames)]
     if params.max_spot_molecules == 1:
         n_mols = np.array([1] * params.num_spots)

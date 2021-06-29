@@ -84,13 +84,10 @@ def set_active_file(filename, img_file, info_file, session_id):
     if filename:
         full_filename=""
         if ".tif" in filename:
-            print(f"Setting active image file to {filename}")
             img_file = os.path.join(full_data_folder, session_id, filename)
         elif ".tsv" in filename:
-            print(f"Setting active info file to {filename}")
             info_file = os.path.join(full_data_folder, session_id, filename)
         elif ".png" in filename:
-            print(f"Setting active info file to {filename}")
             info_file = os.path.join(web_data_folder, session_id, filename)
     else:
         img_file = ""

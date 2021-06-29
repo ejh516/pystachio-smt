@@ -52,7 +52,6 @@ def layout(params):
     prevent_initial_call=True
     )
 def run_postprocessing_task(nclicks, active_file, params_json, post_update):
-    print(f"Running postprocessing on params.name")
     params = Parameters(json.loads(params_json))
     params.display_figures = False
     if ".tif" in active_file:

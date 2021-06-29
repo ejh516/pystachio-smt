@@ -32,17 +32,10 @@ def layout():
 @app.callback(Output('info-content', 'children'),
     Input('session-active-info-file-store', 'data'))
 def update_info(filename):
-    print(f"Infoing {filename}")
     if '.png' in filename:
-        print(f"Drawing {filename}")
         return [html.Img(src=filename)]
     elif '.tsv' in filename:
-        print(f"Tabling {filename}")
         df = pd.read_csv(filename, delimiter="\t")
-
-        print("Columns:")
-        for i in df.columns:
-            print(f"    {i}")
 
         return [
             dash_table.DataTable(
