@@ -471,15 +471,15 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
     for traj in trajs:
         if traj.length <params.num_stoic_frames:
             continue
-        if params.stoic_method == "initial":
+        if params.stoic_method == "Initial":
             # Initial intensity
             traj.stoichiometry = traj.intensity[0] / isingle
-        elif params.stoic_method == "mean":
+        elif params.stoic_method == "Mean":
             # Mean of first N frames
             traj.stoichiometry = (
                 np.mean(traj.intensity[: params.num_stoic_frames]) / isingle
                 )
-        elif params.stoic_method == "linear_fit":
+        elif params.stoic_method == "Linear":
             if traj.start_frame-startframe>4:
                 continue #stoics.append(traj.intensity[0] / isingle)
             else:
@@ -492,11 +492,11 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
                 intercept = popt[1]
                 if intercept > 0 and popt[0]<0 and startframe!=100000:
                     traj.stoichiometry = (intercept + abs((traj.start_frame-startframe)*popt[0])) / isingle
-                    # traj.stoichiometry = intercept/isingle
+                    traj.stoichiometry = traj.stoichiometry[0]
                 else:
                     continue 
                     # traj.stoichiometry = traj.intensity[0] / isingle
-        stoics.append(traj.stoichiometry[0])
+        stoics.append(traj.stoichiometry)
     stoics = np.array(stoics)
     max_stoic = int(np.round(np.amax(stoics)))
 
