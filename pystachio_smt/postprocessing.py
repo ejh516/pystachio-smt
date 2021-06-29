@@ -421,7 +421,15 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
         plt.plot(t/10**3)
         ck_data.append(chung_kennedy_filter(t,params.chung_kennedy_window,1)[0][:-1])
     ofile = params.name+"_chung_kennedy_data.csv"
-    np.savetxt(ofile, ck_data, '%s', delimiter=',')
+    f = open(ofile, 'w')
+    ck_data = np.array(ck_data)
+    print(ck_data[0])
+    for ck in range(len(ck_data)): 
+        f.write(str(ck_data[ck][0]))
+        for j in range(len(ck_data[ck])): 
+            f.write(","+str(ck_data[ck][j]))
+        f.write("\n")
+    f.close()
     plt.xlabel("Frame number")
     plt.ylabel("Intensity (camera counts per pixel x$10^3$)")
     if channel=="L":
@@ -449,6 +457,7 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
         else:
             plt.title("Whole frame Chung-Kennedy intensity")
             ofile = params.name+"_CK_filtered_intensities.png"
+        plt.ticklabel_format(axis='y', style='sci', scilimits=(0,3))
         plt.savefig(ofile, dpi=300)      
         plt.show()
 
