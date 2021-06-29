@@ -14,7 +14,7 @@ from scipy.spatial import distance_matrix
 import os
 import trajectories, images
 
-display_figures = False
+
 def postprocess(params, simulated=False, stepwise=False):
     if not params.ALEX:
         trajs = []
@@ -219,8 +219,9 @@ def colocalize(params, Ltrajs, Rtrajs):
     plt.plot([x,x],[0,x], 'w--')
     plt.ylim([0,x])
     plt.savefig("colocalized_spots.png", dpi=300)
-    if display_figures:
+    if params.display_figures:
         plt.show()
+    plt.close()
 
 def linker(params, spots1, spots2): #spots1 and spots2 are arrays going xpos, ypos, xwidth, ywidth, traj#
     s1_pos = []
@@ -298,8 +299,9 @@ def plot_snr(params,snr,channel=None):
         plt.title("Whole frame SNR plot")
         outseed = params.name + "_SNR"
     plt.savefig(outseed+"_plot.png", dpi=300)
-    if display_figures:
+    if params.display_figures:
         plt.show()
+    plt.close()
     peak = x[np.where(pdf == np.amax(pdf))]
     ofile = params.name + "_data.tsv"
     f = open(ofile, 'w')
@@ -344,8 +346,9 @@ def get_isingle(params, intensities, channel=None):
     labs = [l.get_label() for l in lns]
     ax2.legend(lns, labs, loc=0)
     plt.savefig(outseed+"_plot.png", dpi=300)   
-    if display_figures:
+    if params.display_figures:
         plt.show()
+    plt.close()
     ofile = outseed + "_data.tsv"
     f = open(ofile, 'w')
     for i in range(len(intensities)):
@@ -393,8 +396,9 @@ def get_diffusion_coef(traj_list, params, channel=None):
                 loc_precisions.append(np.sqrt(popt[1]) / 4.0)
         except:
             print("oh no")
-    if display_figures:
+    if params.display_figures:
         plt.show()
+    plt.close()
     plt.hist(diffusion_coefs)
     plt.xlabel("Diffusion coefficient ($\mu$m$^{2}$s$^{-1}$)")
     plt.ylabel("Number of foci trajectories")
@@ -408,8 +412,9 @@ def get_diffusion_coef(traj_list, params, channel=None):
         #plt.title("Whole frame diffusion coefficients\nMean = %3.2f"%(np.mean(diffusion_coefs)))
         ofile = params.name+"_diff_coeff.png"
     plt.savefig(ofile, dpi=300)
-    if display_figures:
+    if params.display_figures:
         plt.show()
+    plt.close()
     f = open(params.name + "_diff_coeff_data.tsv", "w")
     for i in range(len(diffusion_coefs)):
         f.write(str(float(diffusion_coefs[i]))+"\n")
@@ -450,7 +455,7 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
         ofile = params.name+"_trajectory_intensities.png"
     plt.savefig(ofile, dpi=300)
 
-    if display_figures:
+    if params.display_figures:
         plt.show()
     plt.close()
     if chung_kennedy:
@@ -469,7 +474,7 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
             ofile = params.name+"_CK_filtered_intensities.png"
         plt.ticklabel_format(axis='y', style='sci', scilimits=(0,3))
         plt.savefig(ofile, dpi=300)
-        if display_figures:
+        if params.display_figures:
             plt.show()
         plt.close()
 
@@ -542,8 +547,9 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
         plt.title("Whole frame stoichiometry")
         oseed = params.name+"_stoichiometry"
     plt.savefig(oseed+"_histogram.png", dpi=300)
-    if display_figures:
+    if params.display_figures:
         plt.show()
+    plt.close()
     plt.scatter(range(len(stoics)), stoics)
     plt.xlabel("Spot #")
     plt.ylabel("Raw stoichiometry")
@@ -557,8 +563,9 @@ def get_stoichiometries(trajs, isingle, params, stepwise_sim=False, channel=None
         plt.title("Whole frame stoichiometry")
         oseed = params.name+"_stoichiometry"
     plt.savefig(oseed+"_scatter.png", dpi=300)
-    if display_figures:
+    if params.display_figures:
         plt.show()
+    plt.close()
     f = open(oseed + "_data.tsv", "w")
     for i in range(len(stoics)):
         f.write(str(float(stoics[i]))+"\n")
