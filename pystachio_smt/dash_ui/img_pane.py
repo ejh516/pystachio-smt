@@ -67,7 +67,6 @@ def update_slider(render_selection, vis_frame, active_file):
     if active_file:
         params = Parameters()
         params.name = active_file.replace('.tif','')
-        print(f"Imaging {active_file}")
         image_data = images.ImageData()
         image_data.read(active_file, params)
         fig = px.imshow(
@@ -78,7 +77,6 @@ def update_slider(render_selection, vis_frame, active_file):
         )
         if (render_selection == "render-all-trajectories" or
             render_selection == "render-current-trajectories"):
-            print(f"Using trajectories {params.name + '_trajectories.tsv'}")
             trajs = read_trajectories(params.name + "_trajectories.tsv")
             colors = px.colors.qualitative.Plotly
             if trajs:
@@ -96,7 +94,6 @@ def update_slider(render_selection, vis_frame, active_file):
                     fig.update_layout(showlegend=False)
 
 
-        print(f"Setting slider max to {image_data.num_frames}")
         label = f"Frame {vis_frame} of {image_data.num_frames}"
         num_frames = image_data.num_frames
 

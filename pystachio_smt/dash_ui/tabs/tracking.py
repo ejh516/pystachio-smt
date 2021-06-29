@@ -56,7 +56,6 @@ def layout(params):
 def run_tracking_task(nclicks, active_file, params_json):
     params = Parameters(json.loads(params_json))
     params._params = json.loads(params_json)
-    print(f"Running tracking on {params.name}")
     if ".tif" in active_file:
         params.name = active_file.replace('.tif','')
 

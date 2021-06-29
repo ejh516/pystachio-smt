@@ -83,7 +83,6 @@ class ImageData:
 
         if params.cell_mask:
             if os.path.isfile(params.cell_mask):
-                print(f"Using mask params.cell_mask")
                 pixel_mask = tifffile.imread(params.cell_mask)
                 pixel_mask = np.where(pixel_mask > 0, 1, 0)
                 self.has_mask = True
