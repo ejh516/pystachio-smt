@@ -37,6 +37,7 @@ def layout(params):
         dcc.Dropdown(id='files-dropdown',
             options=[],
             clearable=False,
+            style={'color':'black'}
         ),
         dcc.Upload(id='data-file-upload',
             children=html.Div(
