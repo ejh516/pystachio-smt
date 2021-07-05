@@ -45,7 +45,8 @@ def layout(params):
 @app.callback([
         Output('tracking-task-loading-output', 'children'), 
         Output('image-slider', 'value'),
-        Output('session-files-update-track-store', 'data')],
+        Output('session-files-update-track-store', 'data'),
+        Output('image-selection', 'value')],
     [
         Input('tracking-task-run', 'n_clicks'), ],
     [
@@ -61,4 +62,4 @@ def run_tracking_task(nclicks, active_file, params_json):
 
     tracking.track(params)
 
-    return ["", 1, True]
+    return ["", 1, True, 'render-current-trajectories']

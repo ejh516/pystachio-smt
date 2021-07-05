@@ -29,7 +29,7 @@ def get_param_input(name, param, param_class):
                 options = list(map( lambda x:{'label': x, 'value': x}, param["options"])),
                 value = param["options"][0],
                 clearable = False,
-                style={'width':'200px'},
+                style={'width':'200px', 'color': 'black'},
             )
         else:
             input_box = dcc.Input(

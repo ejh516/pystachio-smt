@@ -35,21 +35,4 @@ def layout(params):
     return html.Div([
             html.H2("Image parameters"),
             html.Table(table),
-            html.Button('Apply', id='images-task-run', n_clicks=0),
         ], id="images-tab-container")
-
-@app.callback([
-        Output('session-files-update-image-store', 'data')],
-    [
-        Input('images-task-run', 'n_clicks'), ],
-    [
-        State('session-active-img-file-store', 'data'),
-        State('session-parameters-store', 'data')],
-    prevent_initial_call=True
-    )
-def apply_image_params(nclicks, active_file, params_json):
-    params = Parameters(json.loads(params_json))
-    if ".tif" in active_file:
-        params.name = active_file.replace('.tif','')
-
-    return [True]
