@@ -56,46 +56,46 @@ def postprocess(params, simulated=False):
         if params.copy_number==True: get_copy_number(params, calculated_isingle)
 
     elif params.ALEX:
+
+        Rtrajs = trajectories.read_trajectories(params.name + "_Rchannel_trajectories.tsv")
+        Ltrajs = trajectories.read_trajectories(params.name + "_Lchannel_trajectories.tsv")
+        Rspots = trajectories.to_spots(Rtrajs)
+        Lspots = trajectories.to_spots(Ltrajs)
+
+        Rintensities= np.array([])
+        Rsnrs = np.array([])
+        Rintensities= np.array([])
+        Rsnrs = np.array([])
+        Lintensities= np.array([])
+        Lsnrs = np.array([])
+        Lintensities= np.array([])
+        Lsnrs = np.array([])         
+        for i in range(len(Rspots)):
+            Rintensities = np.concatenate((Rintensities,Rspots[i].spot_intensity))
+            Rsnrs = np.concatenate((Rsnrs,Rspots[i].snr))
+        for i in range(len(Lspots)):
+            Lintensities = np.concatenate((Lintensities,Lspots[i].spot_intensity))
+            Lsnrs = np.concatenate((Lsnrs,Lspots[i].snr))            
+        if params.calculate_isingle:
+            R_isingle = get_isingle(params,Rintensities, channel="R")
+            L_isingle = get_isingle(params,Lintensities, channel="L")
+        else:
+            R_isingle = params.R_isingle
+            L_isingle = params.L_isingle
+
+        L_calculated_snr = plot_snr(params,Lsnrs, channel="L")
+        R_calculated_snr = plot_snr(params,Rsnrs, channel="R")
+        Ldc, Llp = get_diffusion_coef(Ltrajs, params, channel="L")
+        Rdc, Rlp = get_diffusion_coef(Rtrajs, params, channel="R")
+        plot_traj_intensities(params, Ltrajs, channel="L")
+        plot_traj_intensities(params, Rtrajs, channel="R")
+        get_stoichiometries(Ltrajs, L_isingle, params, channel="L")
+        get_stoichiometries(Rtrajs, R_isingle, params, channel="R")
+        
+        if params.copy_number==True: 
+            get_copy_number(params, Lcalculated_isingle, channel="L")
+            get_copy_number(params, Rcalculated_isingle, channel="R")
         if params.colocalize==True:
-            Rtrajs = trajectories.read_trajectories(params.name + "_Rchannel_trajectories.tsv")
-            Ltrajs = trajectories.read_trajectories(params.name + "_Lchannel_trajectories.tsv")
-            Rspots = trajectories.to_spots(Rtrajs)
-            Lspots = trajectories.to_spots(Ltrajs)
-
-            Rintensities= np.array([])
-            Rsnrs = np.array([])
-            Rintensities= np.array([])
-            Rsnrs = np.array([])
-            Lintensities= np.array([])
-            Lsnrs = np.array([])
-            Lintensities= np.array([])
-            Lsnrs = np.array([])         
-            for i in range(len(Rspots)):
-                Rintensities = np.concatenate((Rintensities,Rspots[i].spot_intensity))
-                Rsnrs = np.concatenate((Rsnrs,Rspots[i].snr))
-            for i in range(len(Lspots)):
-                Lintensities = np.concatenate((Lintensities,Lspots[i].spot_intensity))
-                Lsnrs = np.concatenate((Lsnrs,Lspots[i].snr))            
-            if params.calculate_isingle:
-                R_isingle = get_isingle(params,Rintensities, channel="R")
-                L_isingle = get_isingle(params,Lintensities, channel="L")
-            else:
-                R_isingle = params.R_isingle
-                L_isingle = params.L_isingle
-
-            L_calculated_snr = plot_snr(params,Lsnrs, channel="L")
-            R_calculated_snr = plot_snr(params,Rsnrs, channel="R")
-            Ldc, Llp = get_diffusion_coef(Ltrajs, params, channel="L")
-            Rdc, Rlp = get_diffusion_coef(Rtrajs, params, channel="R")
-            plot_traj_intensities(params, Ltrajs, channel="L")
-            plot_traj_intensities(params, Rtrajs, channel="R")
-            get_stoichiometries(Ltrajs, L_isingle, params, channel="L")
-            get_stoichiometries(Rtrajs, R_isingle, params, channel="R")
-            
-            if params.copy_number==True: 
-                get_copy_number(params, Lcalculated_isingle, channel="L")
-                get_copy_number(params, Rcalculated_isingle, channel="R")
-
             if params.colocalize: colocalize(params, Ltrajs, Rtrajs)
 
     else: sys.exit("ERROR: look do you want ALEX or not?\nSet params.ALEX=True or False")
@@ -436,7 +436,7 @@ def plot_traj_intensities(params, trajs, channel=None, chung_kennedy=True):
     for traj in trajs:
         t = np.array(traj.intensity)
         plt.plot(t/10**3)
-        ck_data.append(chung_kennedy_filter(t,params.chung_kennedy_window,1)[0][:-1])
+        #ck_data.append(chung_kennedy_filter(t,params.chung_kennedy_window,1)[0][:-1])
     ofile = params.name+"_chung_kennedy_data.csv"
     f = open(ofile, 'w')
     ck_data = np.array(ck_data)
@@ -495,6 +495,7 @@ def get_stoichiometries(trajs, isingle, params, channel=None):
         if params.stoic_method == "Initial":
             # Initial intensity
             traj.stoichiometry = traj.intensity[0] / isingle
+            traj.stoichiometry = traj.stoichiometry[0]
         elif params.stoic_method == "Mean":
             # Mean of first N frames
             traj.stoichiometry = (
@@ -511,13 +512,15 @@ def get_stoichiometries(trajs, isingle, params, channel=None):
                 ydata = traj.intensity[0: params.num_stoic_frames]
                 popt, pcov = curve_fit(straightline, xdata, ydata)
                 intercept = popt[1]
-                if intercept > 0 and popt[0]<0 and startframe!=100000:
+                print(popt)
+                if intercept > 0:  #and popt[0]<0 and startframe!=100000:
                     traj.stoichiometry = (intercept + abs((traj.start_frame-startframe)*popt[0])) / isingle
                     traj.stoichiometry = traj.stoichiometry[0]
                 else:
                     continue 
                     # traj.stoichiometry = traj.intensity[0] / isingle
         stoics.append(traj.stoichiometry)
+    #print(stoics)
     stoics = np.array(stoics)
     max_stoic = int(np.round(np.amax(stoics)))
 
