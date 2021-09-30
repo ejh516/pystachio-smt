@@ -512,7 +512,7 @@ def get_stoichiometries(trajs, isingle, params, channel=None):
                 ydata = traj.intensity[0: params.num_stoic_frames]
                 popt, pcov = curve_fit(straightline, xdata, ydata)
                 intercept = popt[1]
-                print(popt)
+                # print(popt)
                 if intercept > 0:  #and popt[0]<0 and startframe!=100000:
                     traj.stoichiometry = (intercept + abs((traj.start_frame-startframe)*popt[0])) / isingle
                     traj.stoichiometry = traj.stoichiometry[0]
